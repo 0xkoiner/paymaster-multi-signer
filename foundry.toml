@@ -1,0 +1,29 @@
+[profile.default]
+solc = "0.8.34"
+evm_version = "prague"
+bytecode_hash = "none"
+cbor_metadata = false
+src = "contracts"
+out = "out"
+libs = ["lib"]
+
+remappings = [
+    "forge-std/=lib/forge-std/src/",
+    "@account-abstraction/contracts/=lib/account-abstraction-v9/contracts/",
+    "@openzeppelin/contracts/=lib/openzeppelin-contracts-v5.5.0/contracts/",
+    "@openzeppelin-upgradeable/contracts/=lib/openzeppelin-contracts-upgradeable-v5.5.0/contracts/"
+]
+
+[lint]
+lint_on_build = false
+
+[fmt]
+bracket_spacing = true
+int_types = "long"
+line_length = 120
+multiline_func_header = "all"
+number_underscore = "thousands"
+quote_style = "double"
+tab_width = 4
+wrap_comments = true
+# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
