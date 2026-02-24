@@ -10,3 +10,6 @@
 [submodule "lib/openzeppelin-contracts-upgradeable-v5.5.0"]
 	path = lib/openzeppelin-contracts-upgradeable-v5.5.0
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable
+[submodule "lib/solady-v0.1.26"]
+	path = lib/solady-v0.1.26
+	url = https://github.com/vectorized/solady

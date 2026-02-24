@@ -9,6 +9,7 @@ libs = ["lib"]
 
 remappings = [
     "forge-std/=lib/forge-std/src/",
+    "@solady/src/=lib/solady-v0.1.26/src/",
     "@account-abstraction/contracts/=lib/account-abstraction-v9/contracts/",
     "@openzeppelin/contracts/=lib/openzeppelin-contracts-v5.5.0/contracts/",
     "@openzeppelin-upgradeable/contracts/=lib/openzeppelin-contracts-upgradeable-v5.5.0/contracts/"

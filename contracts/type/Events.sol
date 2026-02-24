@@ -2,6 +2,8 @@
 pragma solidity 0.8.34;
 
 library Events {
+    event SignerAdded(address signer);
+    event SignerRemoved(address signer);
     event UserOperationSponsored(
         bytes32 indexed userOpHash,
         /// @param The user that requested sponsorship.

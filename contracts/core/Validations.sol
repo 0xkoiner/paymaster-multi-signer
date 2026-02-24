@@ -4,13 +4,20 @@ pragma solidity 0.8.34;
 import { Events } from "../type/Events.sol";
 import { Errors } from "../type/Errors.sol";
 import { BasePaymaster } from "./BasePaymaster.sol";
+import { PaymasterLib } from "../library/PaymasterLib.sol";
+import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import { _packValidationData } from "@account-abstraction/contracts/core/Helpers.sol";
 import { UserOperationLib } from "@account-abstraction/contracts/core/UserOperationLib.sol";
 import { PostOpMode, Types, ERC20PaymasterData, ERC20PostOpContext } from "../type/Types.sol";
+import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import { PackedUserOperation } from "@account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 
 using UserOperationLib for PackedUserOperation;
 
-contract Validations is BasePaymaster {
+abstract contract Validations is BasePaymaster {
+    using PaymasterLib for *;
+
     constructor() { }
 
     function validatePaymasterUserOp(
@@ -19,7 +26,6 @@ contract Validations is BasePaymaster {
         uint256 requiredPreFund
     )
         external
-        override
         returns (bytes memory context, uint256 validationData)
     {
         _requireFromEntryPoint();
@@ -33,7 +39,6 @@ contract Validations is BasePaymaster {
         uint256 actualUserOpFeePerGas
     )
         external
-        override
     {
         _requireFromEntryPoint();
         _postOp(mode, context, actualGasCost, actualUserOpFeePerGas);
@@ -48,7 +53,7 @@ contract Validations is BasePaymaster {
         returns (bytes memory, uint256)
     {
         (uint8 mode, bool allowAllBundlers, bytes calldata paymasterConfig) =
-            _parsePaymasterAndData(_userOp.paymasterAndData, Types.PAYMASTER_DATA_OFFSET);
+            _userOp.paymasterAndData._parsePaymasterAndData(Types.PAYMASTER_DATA_OFFSET);
 
         if (!allowAllBundlers && !isBundlerAllowed[tx.origin]) {
             revert Errors.BundlerNotAllowed(tx.origin);
@@ -81,7 +86,7 @@ contract Validations is BasePaymaster {
         internal
         returns (bytes memory, uint256)
     {
-        (uint48 validUntil, uint48 validAfter, bytes calldata signature) = _parseVerifyingConfig(_paymasterConfig);
+        (uint48 validUntil, uint48 validAfter, bytes calldata signature) = _paymasterConfig._parseVerifyingConfig();
 
         bytes32 hash = MessageHashUtils.toEthSignedMessageHash(getHash(Types.VERIFYING_MODE, _userOp));
         address recoveredSigner = ECDSA.recover(hash, signature);
@@ -89,7 +94,7 @@ contract Validations is BasePaymaster {
         bool isSignatureValid = signers[recoveredSigner];
         uint256 validationData = _packValidationData(!isSignatureValid, validUntil, validAfter);
 
-        emit Events.UserOperationSponsored(_userOpHash, _userOp.getSender(), Types.VERIFYING_MODE, address(0), 0, 0);
+        emit Events.UserOperationSponsored(_userOpHash, _userOp._getSender(), Types.VERIFYING_MODE, address(0), 0, 0);
         return ("", validationData);
     }
 
@@ -103,20 +108,20 @@ contract Validations is BasePaymaster {
         internal
         returns (bytes memory, uint256)
     {
-        ERC20PaymasterData memory cfg = _parseErc20Config(_paymasterConfig);
+        ERC20PaymasterData memory cfg = _paymasterConfig._parseErc20Config();
 
         bytes32 hash = MessageHashUtils.toEthSignedMessageHash(getHash(_mode, _userOp));
         address recoveredSigner = ECDSA.recover(hash, cfg.signature);
 
         bool isSignatureValid = signers[recoveredSigner];
         uint256 validationData = _packValidationData(!isSignatureValid, cfg.validUntil, cfg.validAfter);
-        bytes memory context = _createPostOpContext(_userOp, _userOpHash, cfg, _requiredPreFund);
+        bytes memory context = _userOp._createPostOpContext(_userOpHash, cfg, _requiredPreFund);
 
         if (!isSignatureValid) {
             return (context, validationData);
         }
 
-        uint256 costInToken = getCostInToken(_requiredPreFund, 0, 0, cfg.exchangeRate);
+        uint256 costInToken = _requiredPreFund._getCostInToken(0, 0, cfg.exchangeRate);
 
         if (cfg.preFundInToken > costInToken) {
             revert Errors.PreFundTooHigh();
@@ -164,7 +169,7 @@ contract Validations is BasePaymaster {
     )
         internal
     {
-        ERC20PostOpContext memory ctx = _parsePostOpContext(_context);
+        ERC20PostOpContext memory ctx = _context._parsePostOpContext();
 
         uint256 expectedPenaltyGasCost = _expectedPenaltyGasCost(
             _actualGasCost, _actualUserOpFeePerGas, ctx.postOpGas, ctx.preOpGasApproximation, ctx.executionGasLimit
@@ -173,7 +178,7 @@ contract Validations is BasePaymaster {
         uint256 actualGasCost = _actualGasCost + expectedPenaltyGasCost;
 
         uint256 costInToken =
-            getCostInToken(actualGasCost, ctx.postOpGas, _actualUserOpFeePerGas, ctx.exchangeRate) + ctx.constantFee;
+            actualGasCost._getCostInToken(ctx.postOpGas, _actualUserOpFeePerGas, ctx.exchangeRate) + ctx.constantFee;
 
         uint256 absoluteCostInToken =
             costInToken > ctx.preFundCharged ? costInToken - ctx.preFundCharged : ctx.preFundCharged - costInToken;
@@ -191,7 +196,9 @@ contract Validations is BasePaymaster {
             SafeTransferLib.safeTransferFrom(ctx.token, ctx.sender, ctx.recipient, preFundInToken - costInToken);
         }
 
-        emit Events.UserOperationSponsored(ctx.userOpHash, ctx.sender, Types.ERC20_MODE, ctx.token, costInToken, ctx.exchangeRate);
+        emit Events.UserOperationSponsored(
+            ctx.userOpHash, ctx.sender, Types.ERC20_MODE, ctx.token, costInToken, ctx.exchangeRate
+        );
     }
 
     function getHash(uint8 _mode, PackedUserOperation calldata _userOp) public view virtual returns (bytes32) {
@@ -235,7 +242,7 @@ contract Validations is BasePaymaster {
     {
         bytes32 userOpHash = keccak256(
             abi.encode(
-                _userOp.getSender(),
+                _userOp._getSender(),
                 _userOp.nonce,
                 _userOp.accountGasLimits,
                 _userOp.preVerificationGas,

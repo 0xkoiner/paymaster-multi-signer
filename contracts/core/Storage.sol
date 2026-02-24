@@ -6,8 +6,7 @@ import { IEntryPoint } from "@account-abstraction/contracts/interfaces/IEntryPoi
 contract Storage {
     IEntryPoint public immutable entryPoint;
 
-
     mapping(address account => bool isValidSigner) public signers;
-    
+
     mapping(address bundler => bool allowed) public isBundlerAllowed;
 }
