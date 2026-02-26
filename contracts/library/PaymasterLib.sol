@@ -186,10 +186,10 @@ library PaymasterLib {
         return ((_actualGasCost + (_postOpGas * _actualUserOpFeePerGas)) * _exchangeRate) / 1e18;
     }
 
-    function _getSender(PackedUserOperation calldata userOp) internal pure returns (address) {
+    function _getSender(PackedUserOperation calldata _userOp) internal pure returns (address) {
         address data;
         assembly {
-            data := calldataload(userOp)
+            data := calldataload(_userOp)
         }
         return address(uint160(data));
     }

@@ -21,27 +21,27 @@ abstract contract Validations is BasePaymaster {
     constructor() { }
 
     function validatePaymasterUserOp(
-        PackedUserOperation calldata userOp,
-        bytes32 userOpHash,
-        uint256 requiredPreFund
+        PackedUserOperation calldata _userOp,
+        bytes32 _userOpHash,
+        uint256 _requiredPreFund
     )
         external
         returns (bytes memory context, uint256 validationData)
     {
         _requireFromEntryPoint();
-        return _validatePaymasterUserOp(userOp, userOpHash, requiredPreFund);
+        return _validatePaymasterUserOp(_userOp, _userOpHash, _requiredPreFund);
     }
 
     function postOp(
-        PostOpMode mode,
-        bytes calldata context,
-        uint256 actualGasCost,
-        uint256 actualUserOpFeePerGas
+        PostOpMode _mode,
+        bytes calldata _context,
+        uint256 _actualGasCost,
+        uint256 _actualUserOpFeePerGas
     )
         external
     {
         _requireFromEntryPoint();
-        _postOp(mode, context, actualGasCost, actualUserOpFeePerGas);
+        _postOp(_mode, _context, _actualGasCost, _actualUserOpFeePerGas);
     }
 
     function _validatePaymasterUserOp(
@@ -137,9 +137,9 @@ abstract contract Validations is BasePaymaster {
     function _expectedPenaltyGasCost(
         uint256 _actualGasCost,
         uint256 _actualUserOpFeePerGas,
-        uint128 postOpGas,
-        uint256 preOpGasApproximation,
-        uint256 executionGasLimit
+        uint128 _postOpGas,
+        uint256 _preOpGasApproximation,
+        uint256 _executionGasLimit
     )
         public
         pure
@@ -147,15 +147,15 @@ abstract contract Validations is BasePaymaster {
         returns (uint256)
     {
         uint256 executionGasUsed = 0;
-        uint256 actualGas = _actualGasCost / _actualUserOpFeePerGas + postOpGas;
+        uint256 actualGas = _actualGasCost / _actualUserOpFeePerGas + _postOpGas;
 
-        if (actualGas > preOpGasApproximation) {
-            executionGasUsed = actualGas - preOpGasApproximation;
+        if (actualGas > _preOpGasApproximation) {
+            executionGasUsed = actualGas - _preOpGasApproximation;
         }
 
         uint256 expectedPenaltyGas = 0;
-        if (executionGasLimit > executionGasUsed) {
-            expectedPenaltyGas = ((executionGasLimit - executionGasUsed) * Types.PENALTY_PERCENT) / 100;
+        if (_executionGasLimit > executionGasUsed) {
+            expectedPenaltyGas = ((_executionGasLimit - executionGasUsed) * Types.PENALTY_PERCENT) / 100;
         }
 
         return expectedPenaltyGas * _actualUserOpFeePerGas;
@@ -234,7 +234,7 @@ abstract contract Validations is BasePaymaster {
 
     function _getHash(
         PackedUserOperation calldata _userOp,
-        uint256 paymasterDataLength
+        uint256 _paymasterDataLength
     )
         internal
         view
@@ -249,7 +249,7 @@ abstract contract Validations is BasePaymaster {
                 _userOp.gasFees,
                 keccak256(_userOp.initCode),
                 keccak256(_userOp.callData),
-                keccak256(_userOp.paymasterAndData[:Types.PAYMASTER_DATA_OFFSET + paymasterDataLength])
+                keccak256(_userOp.paymasterAndData[:Types.PAYMASTER_DATA_OFFSET + _paymasterDataLength])
             )
         );
 

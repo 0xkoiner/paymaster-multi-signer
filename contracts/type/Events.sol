@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.34;
 
+import { Key } from "../type/Types.sol";
+
 library Events {
     event SignerAdded(address signer);
     event SignerRemoved(address signer);
+    event Revoked(bytes32 indexed keyHash);
+    event Authorized(bytes32 indexed keyHash, Key key);
     event UserOperationSponsored(
         bytes32 indexed userOpHash,
         /// @param The user that requested sponsorship.

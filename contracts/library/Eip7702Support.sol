@@ -11,12 +11,12 @@ library Eip7702Support {
     bytes3 internal constant EIP7702_PREFIX = 0xef0100;
     bytes2 internal constant INITCODE_EIP7702_MARKER = 0x7702;
 
-    function _getEip7702InitCodeHashOverride(PackedUserOperation calldata userOp) internal view returns (bytes32) {
-        bytes calldata initCode = userOp.initCode;
+    function _getEip7702InitCodeHashOverride(PackedUserOperation calldata _userOp) internal view returns (bytes32) {
+        bytes calldata initCode = _userOp.initCode;
         if (!_isEip7702InitCode(initCode)) {
             return 0;
         }
-        address delegate = _getEip7702Delegate(userOp.sender);
+        address delegate = _getEip7702Delegate(_userOp.sender);
         if (initCode.length <= 20) return keccak256(abi.encodePacked(delegate));
         else return keccak256(abi.encodePacked(delegate, initCode[20:]));
     }
@@ -34,16 +34,16 @@ library Eip7702Support {
         return initCodeStart == bytes20(INITCODE_EIP7702_MARKER);
     }
 
-    function _getEip7702Delegate(address sender) internal view returns (address) {
+    function _getEip7702Delegate(address _sender) internal view returns (address) {
         bytes32 senderCode;
 
         assembly {
-            extcodecopy(sender, 0, 0, 23)
+            extcodecopy(_sender, 0, 0, 23)
             senderCode := mload(0)
         }
 
         if (bytes3(senderCode) != EIP7702_PREFIX) {
-            require(sender.code.length > 0, Errors.SenderHasNoCode());
+            require(_sender.code.length > 0, Errors.SenderHasNoCode());
             revert Errors.NotEIP7702Delegate();
         }
         return address(bytes20(senderCode << 24));

@@ -9,12 +9,12 @@ abstract contract BasePaymaster is MultiSigner {
         entryPoint.depositTo{ value: msg.value }(address(this));
     }
 
-    function withdrawTo(address payable withdrawAddress, uint256 amount) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        entryPoint.withdrawTo(withdrawAddress, amount);
+    function withdrawTo(address payable _withdrawAddress, uint256 _amount) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        entryPoint.withdrawTo(_withdrawAddress, _amount);
     }
 
-    function addStake(uint32 unstakeDelaySec) external payable onlyAdminOrManager {
-        entryPoint.addStake{ value: msg.value }(unstakeDelaySec);
+    function addStake(uint32 _unstakeDelaySec) external payable onlyAdminOrManager {
+        entryPoint.addStake{ value: msg.value }(_unstakeDelaySec);
     }
 
     function getDeposit() public view returns (uint256) {
@@ -25,8 +25,8 @@ abstract contract BasePaymaster is MultiSigner {
         entryPoint.unlockStake();
     }
 
-    function withdrawStake(address payable withdrawAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        entryPoint.withdrawStake(withdrawAddress);
+    function withdrawStake(address payable _withdrawAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        entryPoint.withdrawStake(_withdrawAddress);
     }
 
     function _requireFromEntryPoint() internal view virtual {
