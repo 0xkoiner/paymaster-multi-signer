@@ -3,6 +3,7 @@ pragma solidity 0.8.34;
 
 library Errors {
     error PreFundTooHigh();
+    error KeyDoesNotExist();
     error SenderHasNoCode();
     error RecipientInvalid();
     error NotEIP7702Delegate();

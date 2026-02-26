@@ -3,10 +3,24 @@ pragma solidity 0.8.34;
 
 import { UserOperationLib } from "@account-abstraction/contracts/core/UserOperationLib.sol";
 
+enum SignerType {
+    P256,
+    WebAuthnP256,
+    Secp256k1
+}
+
 enum PostOpMode {
     opSucceeded,
     opReverted,
     postOpReverted
+}
+
+struct Key {
+    uint40 expiry;
+    SignerType keyType;
+    bool isSuperAdmin;
+    bool isAdmin;
+    bytes publicKey;
 }
 
 /// @notice Hold all configs needed in ERC-20 mode.
