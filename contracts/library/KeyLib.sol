@@ -51,10 +51,7 @@ library KeyLib {
     }
 
     function _isSigner(Key memory _k) internal pure returns (bool) {
-        if (
-            _k.isSuperAdmin || _k.isAdmin || _k.expiry == type(uint40).max
-                || _k.publicKey.length == 0
-        ) {
+        if (_k.isSuperAdmin || _k.isAdmin || _k.expiry == type(uint40).max || _k.publicKey.length == 0) {
             return false;
         }
         return true;

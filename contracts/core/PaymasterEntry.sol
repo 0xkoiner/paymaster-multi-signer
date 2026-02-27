@@ -19,7 +19,6 @@ contract PaymasterEntry is Paymaster {
         if (!_superAdmin._isSuperAdmin()) revert();
         if (!_admin._isAdmin()) revert();
 
-
         authorize(_superAdmin);
         authorize(_admin);
 

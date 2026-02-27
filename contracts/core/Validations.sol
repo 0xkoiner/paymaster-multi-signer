@@ -110,7 +110,7 @@ abstract contract Validations is BasePaymaster {
 
         bool isSignatureValid;
         uint256 validationData;
-        
+
         {
             bytes32 hash = MessageHashUtils.toEthSignedMessageHash(getHash(_mode, _userOp));
             address recoveredSigner = ECDSA.recover(hash, cfg.signature);
