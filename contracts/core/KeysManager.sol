@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.34;
 
-import { Storage } from "./Storage.sol";
 import { Key } from "../type/Types.sol";
 import { Errors } from "../type/Errors.sol";
 import { Events } from "../type/Events.sol";
@@ -9,9 +8,10 @@ import { KeyLib } from "../library/KeyLib.sol";
 import { SignerType } from "../type/Types.sol";
 import { LibBit } from "@solady/src/utils/LibBit.sol";
 import { LibBytes } from "@solady/src/utils/LibBytes.sol";
+import { ManagerAccessControl } from "./ManagerAccessControl.sol";
 import { EnumerableSetLib } from "@solady/src/utils/EnumerableSetLib.sol";
 
-contract KeysManager is Storage {
+contract KeysManager is ManagerAccessControl {
     using KeyLib for *;
     using EnumerableSetLib for *;
     using LibBytes for LibBytes.BytesStorage;
@@ -23,6 +23,7 @@ contract KeysManager is Storage {
     }
 
     function revoke(bytes32 _keyHash) public {
+        // Check the executor if the superAdmin
         _removeKey(_keyHash);
         emit Events.Revoked(_keyHash);
     }

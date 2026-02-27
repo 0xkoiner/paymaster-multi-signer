@@ -18,8 +18,6 @@ using UserOperationLib for PackedUserOperation;
 abstract contract Validations is BasePaymaster {
     using PaymasterLib for *;
 
-    constructor() { }
-
     function validatePaymasterUserOp(
         PackedUserOperation calldata _userOp,
         bytes32 _userOpHash,
@@ -110,11 +108,16 @@ abstract contract Validations is BasePaymaster {
     {
         ERC20PaymasterData memory cfg = _paymasterConfig._parseErc20Config();
 
-        bytes32 hash = MessageHashUtils.toEthSignedMessageHash(getHash(_mode, _userOp));
-        address recoveredSigner = ECDSA.recover(hash, cfg.signature);
+        bool isSignatureValid;
+        uint256 validationData;
+        
+        {
+            bytes32 hash = MessageHashUtils.toEthSignedMessageHash(getHash(_mode, _userOp));
+            address recoveredSigner = ECDSA.recover(hash, cfg.signature);
+            isSignatureValid = signers[recoveredSigner];
+            validationData = _packValidationData(!isSignatureValid, cfg.validUntil, cfg.validAfter);
+        }
 
-        bool isSignatureValid = signers[recoveredSigner];
-        uint256 validationData = _packValidationData(!isSignatureValid, cfg.validUntil, cfg.validAfter);
         bytes memory context = _userOp._createPostOpContext(_userOpHash, cfg, _requiredPreFund);
 
         if (!isSignatureValid) {
