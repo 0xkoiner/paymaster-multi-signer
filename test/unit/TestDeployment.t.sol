@@ -7,8 +7,14 @@ import { KeyLib } from "../../contracts/library/KeyLib.sol";
 import { Key, SignerType } from "../../contracts/type/Types.sol";
 import { IEntryPoint } from "lib/account-abstraction-v9/contracts/interfaces/IEntryPoint.sol";
 
-contract Deployment is Helpers {
+contract TestDeployment is Helpers {
     using KeyLib for *;
+
+    // ------------------------------------------------------------------------------------
+    //
+    //                                        Storage
+    //
+    // ------------------------------------------------------------------------------------
 
     Key internal superAdmin;
     Key internal admin;
@@ -26,6 +32,7 @@ contract Deployment is Helpers {
         _deployment();
     }
 
+    // Test full deployment and states
     function test_after_deploy() external {
         uint256 keyCount = paymaster.keyCount();
         (Key[] memory keys, bytes32[] memory hashes) = paymaster.getKeys();
@@ -37,6 +44,13 @@ contract Deployment is Helpers {
         _assertBundlers();
     }
 
+    // ------------------------------------------------------------------------------------
+    //
+    //                                        Helpers
+    //
+    // ------------------------------------------------------------------------------------
+
+    // Deploy Paymaster
     function _deployment() internal {
         Key[] memory kS = new Key[](1);
         kS[0] = signer;
@@ -44,6 +58,13 @@ contract Deployment is Helpers {
         _deploy(superAdmin, admin, kS, IEntryPoint(Constants.EP_V9_ADDRESS), bundlers);
     }
 
+    // ------------------------------------------------------------------------------------
+    //
+    //                                        Assertion
+    //
+    // ------------------------------------------------------------------------------------
+
+    // Assert states (keys, keyhash, entrypoint)
     function _assert(Key memory _k, Key memory _kStorage, bytes32 _keyHash) internal view {
         assertEq(_k.expiry, _kStorage.expiry, "Not Same expiry");
         assertEq(uint8(_k.keyType), uint8(_kStorage.keyType), "Not Same keyType");
@@ -56,6 +77,7 @@ contract Deployment is Helpers {
         assertEq(Constants.EP_V9_ADDRESS, address(paymaster.entryPoint()), "Not Same entryPoint");
     }
 
+    // Assert bundlers list
     function _assertBundlers() internal {
         for (uint256 i = 0; i < bundlers.length;) {
             assertTrue(paymaster.isBundlerAllowed(bundlers[i]), "The bundler is not allowed");

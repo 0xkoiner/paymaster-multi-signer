@@ -112,4 +112,9 @@ contract AAHelpers is Data {
         vm.prank(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA, __PAYMASTER_SUPER_ADMIN_ADDRESS_EOA);
         IEntryPoint(Constants.EP_V9_ADDRESS).handleOps(_userOps, payable(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA));
     }
+
+    // Attache designatore to EOA
+    function _etch7702(address _eoa, address _impl) internal {
+        vm.etch(_eoa, abi.encodePacked(bytes3(0xef0100), address(_impl)));
+    }
 }
