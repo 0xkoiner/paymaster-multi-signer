@@ -6,6 +6,8 @@ cbor_metadata = false
 src = "contracts"
 out = "out"
 libs = ["lib"]
+optimizer = true
+optimizer_runs = 1000000
 
 remappings = [
     "forge-std/=lib/forge-std/src/",
