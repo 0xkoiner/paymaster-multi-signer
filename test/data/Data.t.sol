@@ -9,7 +9,7 @@ import { PaymasterEntry } from "../../contracts/core/PaymasterEntry.sol";
 import { EntryPoint } from "../../lib/account-abstraction-v9/contracts/core/EntryPoint.sol";
 import { IEntryPoint } from "lib/account-abstraction-v9/contracts/interfaces/IEntryPoint.sol";
 import { ERC20Mock } from "lib/openzeppelin-contracts-v5.5.0/contracts/mocks/token/ERC20Mock.sol";
-import {Simple7702Account} from "../../lib/account-abstraction-v9/contracts/accounts/Simple7702Account.sol";
+import { Simple7702Account } from "../../lib/account-abstraction-v9/contracts/accounts/Simple7702Account.sol";
 
 contract Data is Test {
     // ------------------------------------------------------------------------------------
@@ -41,7 +41,7 @@ contract Data is Test {
     // Account
     uint256 internal __7702_EOA;
     address internal __7702_ADDRESS_EOA;
-    
+
     function setUp() public virtual {
         _createKeys();
         entryPoint = new EntryPoint();
