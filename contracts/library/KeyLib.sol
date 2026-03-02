@@ -32,7 +32,7 @@ library KeyLib {
 
     function _isSuperAdmin(Key memory _k) internal pure returns (bool) {
         if (
-            !_k.isSuperAdmin || _k.isAdmin || uint8(_k.keyType) > uint8(1) || _k.expiry != type(uint40).max
+            !_k.isSuperAdmin || _k.isAdmin || uint8(_k.keyType) < uint8(1) || _k.expiry != type(uint40).max
                 || _k.publicKey.length == 0
         ) {
             return false;
@@ -42,7 +42,7 @@ library KeyLib {
 
     function _isAdmin(Key memory _k) internal pure returns (bool) {
         if (
-            _k.isSuperAdmin || !_k.isAdmin || uint8(_k.keyType) > uint8(1) || _k.expiry == type(uint40).max
+            _k.isSuperAdmin || !_k.isAdmin || uint8(_k.keyType) < uint8(1) || _k.expiry == type(uint40).max
                 || _k.publicKey.length == 0
         ) {
             return false;

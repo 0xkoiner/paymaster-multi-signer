@@ -31,9 +31,12 @@ contract PaymasterEntry is Paymaster {
             }
         }
 
-        for (i; i < _allowedBundlers.length;) {
+        for (i = 0; i < _allowedBundlers.length;) {
             if (_allowedBundlers[i] == address(0)) revert();
             isBundlerAllowed[_allowedBundlers[i]] = true;
+            unchecked {
+                ++i;
+            }
         }
 
         if (address(_entryPoint) == address(0)) revert();
