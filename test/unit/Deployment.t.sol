@@ -52,6 +52,8 @@ contract Deployment is Helpers {
         assertEq(_k.publicKey, _kStorage.publicKey, "Not Same publicKey");
 
         assertEq(_keyHash, _kStorage.hash(), "Not Same keyHash");
+        
+        assertEq(Constants.EP_V9_ADDRESS, address(paymaster.entryPoint()), "Not Same entryPoint");
     }
 
     function _assertBundlers() internal {
