@@ -45,6 +45,7 @@ contract Data is Test {
     function setUp() public virtual {
         _createKeys();
         entryPoint = new EntryPoint();
+        vm.etch(Constants.EP_V9_ADDRESS, address(entryPoint).code);
         entryPoint = EntryPoint(payable(Constants.EP_V9_ADDRESS));
         sponsorERC20 = new ERC20Mock();
         keysManager = new KeysManager();

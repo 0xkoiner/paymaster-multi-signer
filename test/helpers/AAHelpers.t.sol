@@ -50,11 +50,12 @@ contract AAHelpers is Data {
         address _sender,
         uint256 _pk,
         bytes memory _callData,
-        Sponsor_Type _sponsorType
+        Sponsor_Type _sponsorType,
+        uint8 _allowAllBundlers
     )
         internal
         view
-        returns (PackedUserOperation[] memory)
+        returns (PackedUserOperation[] memory, bytes32 userOpHash)
     {
         PackedUserOperation[] memory u = new PackedUserOperation[](1);
         u[0].sender = _sender;
@@ -65,7 +66,12 @@ contract AAHelpers is Data {
 
         if (_sponsorType == Sponsor_Type.ETH) {
             u[0].paymasterAndData = abi.encodePacked(
-                address(paymaster), uint128(1_000_000), uint128(1_000_000), uint8(1), type(uint48).max, uint48(0)
+                address(paymaster),
+                uint128(1_000_000),
+                uint128(1_000_000),
+                _allowAllBundlers,
+                type(uint48).max,
+                uint48(0)
             );
 
             bytes32 hash = SignatureCheckerLib.toEthSignedMessageHash(IPaymaster(address(paymaster)).getHash(0, u[0]));
@@ -74,7 +80,7 @@ contract AAHelpers is Data {
 
             u[0].paymasterAndData = abi.encodePacked(u[0].paymasterAndData, abi.encodePacked(r, s, v));
 
-            bytes32 userOpHash = IEntryPoint(Constants.EP_V9_ADDRESS).getUserOpHash(u[0]);
+            userOpHash = IEntryPoint(Constants.EP_V9_ADDRESS).getUserOpHash(u[0]);
             (v, r, s) = vm.sign(_pk, userOpHash);
             u[0].signature = abi.encode(uint8(0), abi.encodePacked(r, s, v));
         } else if (_sponsorType == Sponsor_Type.ERC20) {
@@ -99,12 +105,12 @@ contract AAHelpers is Data {
 
             u[0].paymasterAndData = abi.encodePacked(u[0].paymasterAndData, abi.encodePacked(r, s, v));
 
-            bytes32 userOpHash = IEntryPoint(Constants.EP_V9_ADDRESS).getUserOpHash(u[0]);
+            userOpHash = IEntryPoint(Constants.EP_V9_ADDRESS).getUserOpHash(u[0]);
             (v, r, s) = vm.sign(_pk, userOpHash);
             u[0].signature = abi.encode(uint8(0), abi.encodePacked(r, s, v));
         }
 
-        return u;
+        return (u, userOpHash);
     }
 
     // Relay UserOperation to EntryPoint
