@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.34;
 
+import {Key} from "../type/Types.sol";
 import { Events } from "../type/Events.sol";
 import { Errors } from "../type/Errors.sol";
+import { KeyLib } from "../library/KeyLib.sol";
 import { BasePaymaster } from "./BasePaymaster.sol";
+import { LibBytes } from "@solady/src/utils/LibBytes.sol";
 import { PaymasterLib } from "../library/PaymasterLib.sol";
 import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
@@ -13,10 +16,15 @@ import { PostOpMode, Types, ERC20PaymasterData, ERC20PostOpContext } from "../ty
 import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import { PackedUserOperation } from "@account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 
+
+import {console2 as console} from "../../lib/forge-std/src/console2.sol";
+
 using UserOperationLib for PackedUserOperation;
 
 abstract contract Validations is BasePaymaster {
+    using KeyLib for *;
     using PaymasterLib for *;
+    using LibBytes for LibBytes.BytesStorage;
 
     function validatePaymasterUserOp(
         PackedUserOperation calldata _userOp,
@@ -89,12 +97,15 @@ abstract contract Validations is BasePaymaster {
         bytes32 hash = MessageHashUtils.toEthSignedMessageHash(getHash(Types.VERIFYING_MODE, _userOp));
         address recoveredSigner = ECDSA.recover(hash, signature);
 
-        bool isSignatureValid = signers[recoveredSigner];
+        Key memory key = getKey(recoveredSigner.hash());
+        bool isSignatureValid = key._keyValidation();
+
         uint256 validationData = _packValidationData(!isSignatureValid, validUntil, validAfter);
 
         emit Events.UserOperationSponsored(_userOpHash, _userOp._getSender(), Types.VERIFYING_MODE, address(0), 0, 0);
         return ("", validationData);
     }
+
 
     function _validateERC20Mode(
         uint8 _mode,
