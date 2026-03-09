@@ -33,7 +33,7 @@ contract TestDeployment is Helpers {
     }
 
     // Test full deployment and states
-    function test_after_deploy() external {
+    function test_after_deploy() external view {
         uint256 keyCount = paymaster.keyCount();
         (Key[] memory keys, bytes32[] memory hashes) = paymaster.getKeys();
 
@@ -78,7 +78,7 @@ contract TestDeployment is Helpers {
     }
 
     // Assert bundlers list
-    function _assertBundlers() internal {
+    function _assertBundlers() internal view {
         for (uint256 i = 0; i < bundlers.length;) {
             assertTrue(paymaster.isBundlerAllowed(bundlers[i]), "The bundler is not allowed");
             unchecked {

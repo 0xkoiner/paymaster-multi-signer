@@ -82,7 +82,7 @@ contract AAHelpers is Data {
 
             userOpHash = IEntryPoint(Constants.EP_V9_ADDRESS).getUserOpHash(u[0]);
             (v, r, s) = vm.sign(_pk, userOpHash);
-            u[0].signature = abi.encode(uint8(0), abi.encodePacked(r, s, v));
+            u[0].signature = abi.encodePacked(r, s, v);
         } else if (_sponsorType == Sponsor_Type.ERC20) {
             u[0].paymasterAndData = abi.encodePacked(
                 address(paymaster),
@@ -107,7 +107,7 @@ contract AAHelpers is Data {
 
             userOpHash = IEntryPoint(Constants.EP_V9_ADDRESS).getUserOpHash(u[0]);
             (v, r, s) = vm.sign(_pk, userOpHash);
-            u[0].signature = abi.encode(uint8(0), abi.encodePacked(r, s, v));
+            u[0].signature = abi.encodePacked(r, s, v);
         }
 
         return (u, userOpHash);
