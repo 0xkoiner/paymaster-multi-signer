@@ -60,7 +60,14 @@ contract TestPaymasterMode00 is Helpers {
         _assert(data, context);
     }
 
-    function test_paymaster_7702_account_mode_0_all_bundlers_eoa_signer() external { }
+    function test_paymaster_7702_account_mode_0_all_bundlers_eoa_signer() external {
+        (PackedUserOperation[] memory u, bytes32 userOpHash) =
+            _getUserOp(__7702_ADDRESS_EOA, __7702_EOA, hex"", Sponsor_Type.ETH, 1);
+
+        vm.prank(Constants.EP_V9_ADDRESS);
+        (bytes memory context, uint256 validationData) = paymaster.validatePaymasterUserOp(u[0], userOpHash, 0);
+        (ValidationData memory data) = _parseValidationData(validationData);
+    }
 
     function test_paymaster_7702_account_mode_0_check_bundler_eoa_signer() external { }
 
