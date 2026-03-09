@@ -36,6 +36,7 @@ contract TestPaymasterMode00 is Helpers {
         _etch7702(__7702_ADDRESS_EOA, address(simple7702Account));
     }
 
+    // Test VERIFYING_MODE with any bundler
     function test_paymaster_entry_point_mode_0_all_bundlers_eoa_signer() external {
         (PackedUserOperation[] memory u, bytes32 userOpHash) =
             _getUserOp(__7702_ADDRESS_EOA, __7702_EOA, hex"", Sponsor_Type.ETH, 1);
@@ -44,13 +45,20 @@ contract TestPaymasterMode00 is Helpers {
         (bytes memory context, uint256 validationData) = paymaster.validatePaymasterUserOp(u[0], userOpHash, 0);
         (ValidationData memory data) = _parseValidationData(validationData);
 
-        assertEq(data.aggregator, address(0), "Not same aggregator address");
-        assertEq(data.validUntil, type(uint48).max, "Not same aggregator validUntil");
-        assertEq(data.validAfter, 0, "Not same aggregator validAfter");
-        assertEq(context, hex"", "Not same aggregator context");
+        _assert(data, context);
     }
 
-    function test_paymaster_entry_point_mode_0_check_bundler_eoa_signer() external { }
+    // Test VERIFYING_MODE with specific bundler
+    function test_paymaster_entry_point_mode_0_check_bundler_eoa_signer() external {
+        (PackedUserOperation[] memory u, bytes32 userOpHash) =
+            _getUserOp(__7702_ADDRESS_EOA, __7702_EOA, hex"", Sponsor_Type.ETH, 0);
+
+        vm.prank(Constants.EP_V9_ADDRESS, bundlers[0]);
+        (bytes memory context, uint256 validationData) = paymaster.validatePaymasterUserOp(u[0], userOpHash, 0);
+        (ValidationData memory data) = _parseValidationData(validationData);
+
+        _assert(data, context);
+    }
 
     function test_paymaster_7702_account_mode_0_all_bundlers_eoa_signer() external { }
 
@@ -68,6 +76,19 @@ contract TestPaymasterMode00 is Helpers {
         kS[0] = signer;
 
         _deploy(superAdmin, admin, kS, IEntryPoint(Constants.EP_V9_ADDRESS), bundlers);
+    }
+
+    // ------------------------------------------------------------------------------------
+    //
+    //                                    Assertion
+    //
+    // ------------------------------------------------------------------------------------
+
+    function _assert(ValidationData memory _data, bytes memory _context) internal view {
+        assertEq(_data.aggregator, address(0), "Not same aggregator address");
+        assertEq(_data.validUntil, type(uint48).max, "Not same aggregator validUntil");
+        assertEq(_data.validAfter, 0, "Not same aggregator validAfter");
+        assertEq(_context, hex"", "Not same aggregator context");
     }
 }
 

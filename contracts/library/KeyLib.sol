@@ -58,7 +58,9 @@ library KeyLib {
     }
 
     function _keyValidation(Key memory _k) internal view returns (bool) {
-        if (_k.expiry < uint40(block.timestamp) || (_k.isSuperAdmin || _k.isAdmin) || _k.publicKey.length == 0) return false;
+        if (_k.expiry < uint40(block.timestamp) || (_k.isSuperAdmin || _k.isAdmin) || _k.publicKey.length == 0) {
+            return false;
+        }
 
         return true;
     }

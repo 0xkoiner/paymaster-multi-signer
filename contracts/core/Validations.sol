@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.34;
 
-import {Key} from "../type/Types.sol";
+import { Key } from "../type/Types.sol";
 import { Events } from "../type/Events.sol";
 import { Errors } from "../type/Errors.sol";
 import { KeyLib } from "../library/KeyLib.sol";
@@ -16,8 +16,7 @@ import { PostOpMode, Types, ERC20PaymasterData, ERC20PostOpContext } from "../ty
 import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import { PackedUserOperation } from "@account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 
-
-import {console2 as console} from "../../lib/forge-std/src/console2.sol";
+import { console2 as console } from "../../lib/forge-std/src/console2.sol";
 
 using UserOperationLib for PackedUserOperation;
 
@@ -105,7 +104,6 @@ abstract contract Validations is BasePaymaster {
         emit Events.UserOperationSponsored(_userOpHash, _userOp._getSender(), Types.VERIFYING_MODE, address(0), 0, 0);
         return ("", validationData);
     }
-
 
     function _validateERC20Mode(
         uint8 _mode,
