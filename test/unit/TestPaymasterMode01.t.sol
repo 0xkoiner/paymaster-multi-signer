@@ -5,11 +5,14 @@ import { Constants } from "../data/Constants.sol";
 import { Helpers } from "../helpers/Helpers.t.sol";
 import { KeyLib } from "../../contracts/library/KeyLib.sol";
 import { Key, SignerType } from "../../contracts/type/Types.sol";
+import { ERC20PostOpContext } from "../../contracts/type/Types.sol";
 import { BaseAccount } from "lib/account-abstraction-v9/contracts/core/BaseAccount.sol";
 import { IEntryPoint } from "lib/account-abstraction-v9/contracts/interfaces/IEntryPoint.sol";
 import { IERC20 } from "../../lib/openzeppelin-contracts-v5.5.0/contracts/token/ERC20/IERC20.sol";
 import { _parseValidationData, ValidationData } from "lib/account-abstraction-v9/contracts/core/Helpers.sol";
 import { PackedUserOperation } from "lib/account-abstraction-v9/contracts/interfaces/PackedUserOperation.sol";
+
+import { console2 as console } from "../../lib/forge-std/src/console2.sol";
 
 contract TestPaymasterMode01 is Helpers {
     using KeyLib for *;
@@ -61,7 +64,7 @@ contract TestPaymasterMode01 is Helpers {
         (bytes memory context, uint256 validationData) = paymaster.validatePaymasterUserOp(u[0], userOpHash, 0);
         (ValidationData memory data) = _parseValidationData(validationData);
 
-        _assert(data, context);
+        _assert(data, context, userOpHash);
     }
 
     // Test ERC20_MODE with specific bundler
@@ -73,7 +76,7 @@ contract TestPaymasterMode01 is Helpers {
         (bytes memory context, uint256 validationData) = paymaster.validatePaymasterUserOp(u[0], userOpHash, 0);
         (ValidationData memory data) = _parseValidationData(validationData);
 
-        _assert(data, context);
+        _assert(data, context, userOpHash);
     }
 
     // Test ERC20_MODE with any bundler full cycle
@@ -138,11 +141,22 @@ contract TestPaymasterMode01 is Helpers {
     //
     // ------------------------------------------------------------------------------------
 
-    function _assert(ValidationData memory _data, bytes memory _context) internal pure {
+    function _assert(ValidationData memory _data, bytes memory _context, bytes32 _userOpHash) internal view {
         assertEq(_data.aggregator, address(0), "Not same aggregator address");
         assertEq(_data.validUntil, type(uint48).max, "Not same aggregator validUntil");
         assertEq(_data.validAfter, 0, "Not same aggregator validAfter");
         assertNotEq(_context, hex"", "Not same aggregator context");
+
+        ERC20PostOpContext memory postOpContext = abi.decode(_context, (ERC20PostOpContext));
+        assertEq(postOpContext.sender, __7702_ADDRESS_EOA, "Not same sender");
+        assertEq(postOpContext.token, address(sponsorERC20), "Not same token");
+        assertEq(postOpContext.treasury, __PAYMASTER_SUPER_ADMIN_ADDRESS_EOA, "Not same treasury");
+        assertEq(postOpContext.exchangeRate, uint256(1e18), "Not same exchangeRate");
+        assertEq(postOpContext.postOpGas, uint128(100_000), "Not same postOpGas");
+        assertEq(postOpContext.userOpHash, _userOpHash, "Not same userOpHash");
+        assertEq(postOpContext.maxFeePerGas, 0, "Not same maxFeePerGas");
+        assertEq(postOpContext.maxPriorityFeePerGas, 0, "Not same maxPriorityFeePerGas");
+        assertEq(postOpContext.recipient, address(0), "Not same recipient");
     }
 
     function _assert(bool _isBefore, uint256 _amount) internal {
@@ -157,10 +171,10 @@ contract TestPaymasterMode01 is Helpers {
 
     function _assertErc20(bool _isBefore, address _erc20, address _reciever) internal {
         if (_isBefore) {
-            balanceBeforeErc20 = IERC20(_erc20).balanceOf(_reciever);
+            balanceBeforeErc20 = IERC20(_erc20).balanceOf(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA);
             assertEq(balanceBeforeErc20, 0, "Not same balance");
         } else {
-            balanceAfterErc20 = IERC20(_erc20).balanceOf(_reciever);
+            balanceAfterErc20 = IERC20(_erc20).balanceOf(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA);
             assertNotEq(balanceAfterErc20, 0, "Not same balance");
         }
     }
