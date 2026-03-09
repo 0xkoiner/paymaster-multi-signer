@@ -20,6 +20,11 @@ contract AAHelpers is Data {
         ETH,
         ERC20
     }
+    // Sponsor type of token used to sponsor user operation
+    enum Allow_Bundlers {
+        SPECIFIC,
+        ALL
+    }
 
     // Struct for calls
     struct Call {
@@ -51,7 +56,7 @@ contract AAHelpers is Data {
         uint256 _pk,
         bytes memory _callData,
         Sponsor_Type _sponsorType,
-        uint8 _allowAllBundlers
+        Allow_Bundlers _allowAllBundlers
     )
         internal
         view
@@ -96,7 +101,7 @@ contract AAHelpers is Data {
                 uint128(100_000),
                 uint256(1e18),
                 uint128(100_000),
-                __PAYMASTER_SUPER_ADMIN_EOA
+                __PAYMASTER_SUPER_ADMIN_ADDRESS_EOA
             );
 
             bytes32 hash = SignatureCheckerLib.toEthSignedMessageHash(IPaymaster(address(paymaster)).getHash(1, u[0]));
@@ -122,5 +127,11 @@ contract AAHelpers is Data {
     // Attache designatore to EOA
     function _etch7702(address _eoa, address _impl) internal {
         vm.etch(_eoa, abi.encodePacked(bytes3(0xef0100), address(_impl)));
+    }
+
+    function _encodeCall(address _target, uint256 _value, bytes memory _data) internal pure returns (Call memory call) {
+        call.target = _target;
+        call.value = _value;
+        call.data = _data;
     }
 }

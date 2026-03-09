@@ -20,6 +20,9 @@ library Constants {
     // ETH value to transfer
     uint256 internal constant ETH_1 = 1 ether;
 
+    // ERC20 to Mint
+    uint256 internal constant ERC20_MINT_VAL_100_18 = 100 ether;
+
     // Fixed Data Mar 02 2048
     uint40 internal constant EXPIRY = 2_466_751_799;
 }

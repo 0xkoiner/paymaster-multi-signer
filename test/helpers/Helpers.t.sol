@@ -16,6 +16,11 @@ contract Helpers is AAHelpers {
         deal(_address, _amount);
     }
 
+    function _mint(address _to, uint256 _amount, bool _isSponsoreErc20) internal {
+        vm.prank(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA);
+        _isSponsoreErc20 ? sponsorERC20.mint(_to, _amount) : sponsorERC20.mint(_to, _amount);
+    }
+
     function _createKeySecp256k1(TypeOfKey _typeOfKey, address _eoa) internal pure returns (Key memory k) {
         k.expiry = _typeOfKey == TypeOfKey.SUPER_ADMIN ? type(uint40).max : Constants.EXPIRY;
         k.keyType = SignerType.Secp256k1;

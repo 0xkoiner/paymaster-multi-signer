@@ -123,7 +123,10 @@ abstract contract Validations is BasePaymaster {
         {
             bytes32 hash = MessageHashUtils.toEthSignedMessageHash(getHash(_mode, _userOp));
             address recoveredSigner = ECDSA.recover(hash, cfg.signature);
-            isSignatureValid = signers[recoveredSigner];
+
+            Key memory key = getKey(recoveredSigner.hash());
+            bool isSignatureValid = key._keyValidation();
+
             validationData = _packValidationData(!isSignatureValid, cfg.validUntil, cfg.validAfter);
         }
 
