@@ -65,9 +65,9 @@ library KeyLib {
         return true;
     }
 
-    function _validateSignatureLength(bytes calldata _signature, uint8 _signerType) internal pure {
+    function _validateSignatureLength(bytes memory _signature, uint8 _signerType) internal pure {
         assembly {
-            let len := _signature.length
+            let len := mload(_signature)
 
             switch _signerType
             case 0x00 {

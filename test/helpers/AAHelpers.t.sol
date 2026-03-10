@@ -57,7 +57,8 @@ contract AAHelpers is Data {
         uint256 _pk,
         bytes memory _callData,
         Sponsor_Type _sponsorType,
-        Allow_Bundlers _allowAllBundlers
+        Allow_Bundlers _allowAllBundlers,
+        SignerType _signerType
     )
         internal
         view
@@ -84,8 +85,7 @@ contract AAHelpers is Data {
 
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(__PAYMASTER_SIGNER_EOA, hash);
 
-            u[0].paymasterAndData =
-                abi.encodePacked(u[0].paymasterAndData, abi.encodePacked(SignerType.Secp256k1, r, s, v));
+            u[0].paymasterAndData = abi.encodePacked(u[0].paymasterAndData, abi.encodePacked(_signerType, r, s, v));
 
             userOpHash = IEntryPoint(Constants.EP_V9_ADDRESS).getUserOpHash(u[0]);
             (v, r, s) = vm.sign(_pk, userOpHash);
@@ -110,7 +110,7 @@ contract AAHelpers is Data {
 
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(__PAYMASTER_SIGNER_EOA, hash);
 
-            u[0].paymasterAndData = abi.encodePacked(u[0].paymasterAndData, abi.encodePacked(r, s, v));
+            u[0].paymasterAndData = abi.encodePacked(u[0].paymasterAndData, abi.encodePacked(_signerType, r, s, v));
 
             userOpHash = IEntryPoint(Constants.EP_V9_ADDRESS).getUserOpHash(u[0]);
             (v, r, s) = vm.sign(_pk, userOpHash);

@@ -47,8 +47,9 @@ contract TestPaymasterMode00 is Helpers {
 
     // Test VERIFYING_MODE with any bundler
     function test_paymaster_entry_point_mode_0_all_bundlers_eoa_signer() external {
-        (PackedUserOperation[] memory u, bytes32 userOpHash) =
-            _getUserOp(__7702_ADDRESS_EOA, __7702_EOA, hex"", Sponsor_Type.ETH, Allow_Bundlers.ALL);
+        (PackedUserOperation[] memory u, bytes32 userOpHash) = _getUserOp(
+            __7702_ADDRESS_EOA, __7702_EOA, hex"", Sponsor_Type.ETH, Allow_Bundlers.ALL, SignerType.Secp256k1
+        );
 
         vm.prank(Constants.EP_V9_ADDRESS);
         (bytes memory context, uint256 validationData) = paymaster.validatePaymasterUserOp(u[0], userOpHash, 0);
@@ -59,8 +60,9 @@ contract TestPaymasterMode00 is Helpers {
 
     // Test VERIFYING_MODE with specific bundler
     function test_paymaster_entry_point_mode_0_check_bundler_eoa_signer() external {
-        (PackedUserOperation[] memory u, bytes32 userOpHash) =
-            _getUserOp(__7702_ADDRESS_EOA, __7702_EOA, hex"", Sponsor_Type.ETH, Allow_Bundlers.SPECIFIC);
+        (PackedUserOperation[] memory u, bytes32 userOpHash) = _getUserOp(
+            __7702_ADDRESS_EOA, __7702_EOA, hex"", Sponsor_Type.ETH, Allow_Bundlers.SPECIFIC, SignerType.Secp256k1
+        );
 
         vm.prank(Constants.EP_V9_ADDRESS, bundlers[0]);
         (bytes memory context, uint256 validationData) = paymaster.validatePaymasterUserOp(u[0], userOpHash, 0);
@@ -74,7 +76,7 @@ contract TestPaymasterMode00 is Helpers {
         _assert(true, 0);
         bytes memory data = abi.encodeWithSelector(BaseAccount.execute.selector, random, 0.1 ether, hex"");
         (PackedUserOperation[] memory u,) =
-            _getUserOp(__7702_ADDRESS_EOA, __7702_EOA, data, Sponsor_Type.ETH, Allow_Bundlers.ALL);
+            _getUserOp(__7702_ADDRESS_EOA, __7702_EOA, data, Sponsor_Type.ETH, Allow_Bundlers.ALL, SignerType.Secp256k1);
 
         vm.prank(bundlers[0], bundlers[0]);
         entryPoint.handleOps(u, payable(bundlers[0]));
@@ -85,8 +87,9 @@ contract TestPaymasterMode00 is Helpers {
     function test_paymaster_7702_account_mode_0_check_bundler_eoa_signer() external {
         _assert(true, 0);
         bytes memory data = abi.encodeWithSelector(BaseAccount.execute.selector, random, 0.1 ether, hex"");
-        (PackedUserOperation[] memory u,) =
-            _getUserOp(__7702_ADDRESS_EOA, __7702_EOA, data, Sponsor_Type.ETH, Allow_Bundlers.SPECIFIC);
+        (PackedUserOperation[] memory u,) = _getUserOp(
+            __7702_ADDRESS_EOA, __7702_EOA, data, Sponsor_Type.ETH, Allow_Bundlers.SPECIFIC, SignerType.Secp256k1
+        );
 
         vm.prank(bundlers[0], bundlers[0]);
         entryPoint.handleOps(u, payable(bundlers[0]));

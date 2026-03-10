@@ -116,6 +116,10 @@ library PaymasterLib {
             config.recipient = address(bytes20(_paymasterConfig[configPointer:configPointer + 20])); // 20 bytes
             configPointer += 20;
         }
+
+        config.signerType = uint8(bytes1(_paymasterConfig[configPointer:configPointer + 1]));
+        configPointer += 1;
+
         config.signature = _paymasterConfig[configPointer:];
 
         if (config.token == address(0)) {
@@ -130,9 +134,8 @@ library PaymasterLib {
             revert Errors.RecipientInvalid();
         }
 
-        if (config.signature.length != 64 && config.signature.length != 65) {
-            revert Errors.PaymasterSignatureLengthInvalid();
-        }
+        if (config.signerType > uint8(type(SignerType).max)) revert Errors.IncorrectSignerType();
+        config.signature._validateSignatureLength((config.signerType));
 
         return config;
     }

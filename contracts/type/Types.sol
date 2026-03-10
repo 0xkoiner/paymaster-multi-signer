@@ -37,6 +37,8 @@ struct ERC20PaymasterData {
     address token;
     /// @dev The exchange rate of the ERC-20 token during sponsorship.
     uint256 exchangeRate;
+    /// @dev The signerType.
+    uint8 signerType;
     /// @dev The paymaster signature.
     bytes signature;
     /// @dev The paymasterValidationGasLimit to be used in the postOp.
