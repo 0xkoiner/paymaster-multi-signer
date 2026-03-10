@@ -2,10 +2,13 @@
 pragma solidity 0.8.34;
 
 import { Errors } from "../type/Errors.sol";
+import { KeyLib } from "../library/KeyLib.sol";
+import { SignerType } from "../../contracts/type/Types.sol";
 import { Types, ERC20PaymasterData, ERC20PostOpContext } from "../type/Types.sol";
 import { UserOperationLib } from "@account-abstraction/contracts/core/UserOperationLib.sol";
 import { PackedUserOperation } from "@account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 
+using KeyLib for bytes;
 using UserOperationLib for PackedUserOperation;
 
 library PaymasterLib {
@@ -43,11 +46,11 @@ library PaymasterLib {
 
         uint48 validUntil = uint48(bytes6(_paymasterConfig[0:6]));
         uint48 validAfter = uint48(bytes6(_paymasterConfig[6:12]));
-        bytes calldata signature = _paymasterConfig[12:];
+        uint8 signerType = uint8(bytes1(_paymasterConfig[12:13]));
+        bytes calldata signature = _paymasterConfig[13:];
 
-        if (signature.length != 64 && signature.length != 65) {
-            revert Errors.PaymasterSignatureLengthInvalid();
-        }
+        if (signerType > uint8(type(SignerType).max)) revert Errors.IncorrectSignerType();
+        signature._validateSignatureLength(signerType);
 
         return (validUntil, validAfter, signature);
     }

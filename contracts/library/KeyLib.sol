@@ -64,4 +64,29 @@ library KeyLib {
 
         return true;
     }
+
+    function _validateSignatureLength(bytes calldata _signature, uint8 _signerType) internal pure {
+        assembly {
+            let len := _signature.length
+
+            switch _signerType
+            case 0x00 {
+                // P256: length must be 128
+                if iszero(eq(len, 128)) {
+                    mstore(0x00, 0xf95eeeac)
+                    revert(0x1c, 0x04)
+                }
+            }
+            case 0x01 {
+            // implement for Passkey/WebAuthn
+            }
+            case 0x02 {
+                // Secp256k1: length must be 64 or 65
+                if iszero(or(eq(len, 64), eq(len, 65))) {
+                    mstore(0x00, 0xf95eeeac)
+                    revert(0x1c, 0x04)
+                }
+            }
+        }
+    }
 }

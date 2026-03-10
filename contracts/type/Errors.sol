@@ -9,6 +9,7 @@ library Errors {
     error SenderHasNoCode();
     error RecipientInvalid();
     error NotEIP7702Delegate();
+    error IncorrectSignerType();
     error ExchangeRateInvalid();
     error IncorrectSignerRole();
     error SenderNotEntryPoint();

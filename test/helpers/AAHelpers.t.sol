@@ -3,6 +3,7 @@ pragma solidity 0.8.34;
 
 import { Data } from "../data/Data.t.sol";
 import { Constants } from "../data/Constants.sol";
+import { SignerType } from "../../contracts/type/Types.sol";
 import { IPaymaster } from "../../contracts/interface/IPaymaster.sol";
 import { SignatureCheckerLib } from "lib/solady-v0.1.26/src/utils/SignatureCheckerLib.sol";
 import { IEntryPoint } from "lib/account-abstraction-v9/contracts/interfaces/IEntryPoint.sol";
@@ -83,7 +84,8 @@ contract AAHelpers is Data {
 
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(__PAYMASTER_SIGNER_EOA, hash);
 
-            u[0].paymasterAndData = abi.encodePacked(u[0].paymasterAndData, abi.encodePacked(r, s, v));
+            u[0].paymasterAndData =
+                abi.encodePacked(u[0].paymasterAndData, abi.encodePacked(SignerType.Secp256k1, r, s, v));
 
             userOpHash = IEntryPoint(Constants.EP_V9_ADDRESS).getUserOpHash(u[0]);
             (v, r, s) = vm.sign(_pk, userOpHash);

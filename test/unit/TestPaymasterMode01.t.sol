@@ -12,8 +12,6 @@ import { IERC20 } from "../../lib/openzeppelin-contracts-v5.5.0/contracts/token/
 import { _parseValidationData, ValidationData } from "lib/account-abstraction-v9/contracts/core/Helpers.sol";
 import { PackedUserOperation } from "lib/account-abstraction-v9/contracts/interfaces/PackedUserOperation.sol";
 
-import { console2 as console } from "../../lib/forge-std/src/console2.sol";
-
 contract TestPaymasterMode01 is Helpers {
     using KeyLib for *;
 
@@ -86,7 +84,7 @@ contract TestPaymasterMode01 is Helpers {
 
         bytes memory dataApprove =
             abi.encodeWithSelector(IERC20.approve.selector, address(paymaster), type(uint256).max);
-        calls.push(_encodeCall(random, 0.1 ether, hex"")); 
+        calls.push(_encodeCall(random, 0.1 ether, hex""));
         calls.push(_encodeCall(address(sponsorERC20), 0, dataApprove));
 
         bytes memory data = abi.encodeWithSelector(BaseAccount.executeBatch.selector, calls);
@@ -108,10 +106,10 @@ contract TestPaymasterMode01 is Helpers {
         bytes memory dataApprove =
             abi.encodeWithSelector(IERC20.approve.selector, address(paymaster), type(uint256).max);
         calls.push(_encodeCall(address(sponsorERC20), 0, dataApprove));
-        calls.push(_encodeCall(random, 0.1 ether, hex"")); 
+        calls.push(_encodeCall(random, 0.1 ether, hex""));
 
         bytes memory data = abi.encodeWithSelector(BaseAccount.executeBatch.selector, calls);
-        
+
         (PackedUserOperation[] memory u,) =
             _getUserOp(__7702_ADDRESS_EOA, __7702_EOA, data, Sponsor_Type.ERC20, Allow_Bundlers.SPECIFIC);
 
