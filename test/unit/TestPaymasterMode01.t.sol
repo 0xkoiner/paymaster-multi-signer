@@ -55,8 +55,9 @@ contract TestPaymasterMode01 is Helpers {
 
     // Test ERC20_MODE with any bundler
     function test_paymaster_entry_point_mode_1_all_bundlers_eoa_signer() external {
-        (PackedUserOperation[] memory u, bytes32 userOpHash) =
-            _getUserOp(__7702_ADDRESS_EOA, __7702_EOA, hex"", Sponsor_Type.ERC20, Allow_Bundlers.ALL, SignerType.Secp256k1);
+        (PackedUserOperation[] memory u, bytes32 userOpHash) = _getUserOp(
+            __7702_ADDRESS_EOA, __7702_EOA, hex"", Sponsor_Type.ERC20, Allow_Bundlers.ALL, SignerType.Secp256k1
+        );
 
         vm.prank(Constants.EP_V9_ADDRESS);
         (bytes memory context, uint256 validationData) = paymaster.validatePaymasterUserOp(u[0], userOpHash, 0);
@@ -67,8 +68,9 @@ contract TestPaymasterMode01 is Helpers {
 
     // Test ERC20_MODE with specific bundler
     function test_paymaster_entry_point_mode_1_check_bundler_eoa_signer() external {
-        (PackedUserOperation[] memory u, bytes32 userOpHash) =
-            _getUserOp(__7702_ADDRESS_EOA, __7702_EOA, hex"", Sponsor_Type.ERC20, Allow_Bundlers.SPECIFIC, SignerType.Secp256k1);
+        (PackedUserOperation[] memory u, bytes32 userOpHash) = _getUserOp(
+            __7702_ADDRESS_EOA, __7702_EOA, hex"", Sponsor_Type.ERC20, Allow_Bundlers.SPECIFIC, SignerType.Secp256k1
+        );
 
         vm.prank(Constants.EP_V9_ADDRESS, bundlers[0]);
         (bytes memory context, uint256 validationData) = paymaster.validatePaymasterUserOp(u[0], userOpHash, 0);
@@ -89,8 +91,9 @@ contract TestPaymasterMode01 is Helpers {
 
         bytes memory data = abi.encodeWithSelector(BaseAccount.executeBatch.selector, calls);
 
-        (PackedUserOperation[] memory u,) =
-            _getUserOp(__7702_ADDRESS_EOA, __7702_EOA, data, Sponsor_Type.ERC20, Allow_Bundlers.ALL, SignerType.Secp256k1);
+        (PackedUserOperation[] memory u,) = _getUserOp(
+            __7702_ADDRESS_EOA, __7702_EOA, data, Sponsor_Type.ERC20, Allow_Bundlers.ALL, SignerType.Secp256k1
+        );
 
         vm.prank(bundlers[0], bundlers[0]);
         entryPoint.handleOps(u, payable(bundlers[0]));
@@ -110,8 +113,9 @@ contract TestPaymasterMode01 is Helpers {
 
         bytes memory data = abi.encodeWithSelector(BaseAccount.executeBatch.selector, calls);
 
-        (PackedUserOperation[] memory u,) =
-            _getUserOp(__7702_ADDRESS_EOA, __7702_EOA, data, Sponsor_Type.ERC20, Allow_Bundlers.SPECIFIC, SignerType.Secp256k1);
+        (PackedUserOperation[] memory u,) = _getUserOp(
+            __7702_ADDRESS_EOA, __7702_EOA, data, Sponsor_Type.ERC20, Allow_Bundlers.SPECIFIC, SignerType.Secp256k1
+        );
 
         vm.prank(bundlers[0], bundlers[0]);
         entryPoint.handleOps(u, payable(bundlers[0]));
