@@ -6,6 +6,8 @@ import { Key } from "../../contracts/type/Types.sol";
 import { Test } from "../../lib/forge-std/src/Test.sol";
 import { KeysManager } from "../../contracts/core/KeysManager.sol";
 import { PaymasterEntry } from "../../contracts/core/PaymasterEntry.sol";
+import { WebAuthnVerifier } from "../../contracts/utils/WebAuthnVerifier.sol";
+import { IWebAuthnVerifier } from "../../contracts/interface/IWebAuthnVerifier.sol";
 import { EntryPoint } from "../../lib/account-abstraction-v9/contracts/core/EntryPoint.sol";
 import { IEntryPoint } from "lib/account-abstraction-v9/contracts/interfaces/IEntryPoint.sol";
 import { ERC20Mock } from "lib/openzeppelin-contracts-v5.5.0/contracts/mocks/token/ERC20Mock.sol";
@@ -22,6 +24,7 @@ contract Data is Test {
     EntryPoint internal entryPoint;
     KeysManager internal keysManager;
     PaymasterEntry internal paymaster;
+    WebAuthnVerifier internal webAuthnVerifier;
     Simple7702Account internal simple7702Account;
 
     // Paymaster Keys
@@ -49,6 +52,7 @@ contract Data is Test {
         entryPoint = EntryPoint(payable(Constants.EP_V9_ADDRESS));
         sponsorERC20 = new ERC20Mock();
         keysManager = new KeysManager();
+        webAuthnVerifier = new WebAuthnVerifier();
         simple7702Account = new Simple7702Account(IEntryPoint(Constants.EP_V9_ADDRESS));
     }
 
@@ -64,11 +68,14 @@ contract Data is Test {
         Key memory _admin,
         Key[] memory _signers,
         IEntryPoint _entryPoint,
+        WebAuthnVerifier _webAuthnVerifier,
         address[] memory _allowedBundlers
     )
         internal
     {
-        paymaster = new PaymasterEntry(_superAdmin, _admin, _signers, _entryPoint, _allowedBundlers);
+        paymaster = new PaymasterEntry(
+            _superAdmin, _admin, _signers, _entryPoint, IWebAuthnVerifier(address(_webAuthnVerifier)), _allowedBundlers
+        );
     }
 
     /// -------------------------------------------------------- Create Key Pairs

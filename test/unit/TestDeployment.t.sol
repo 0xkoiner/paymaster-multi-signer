@@ -55,7 +55,7 @@ contract TestDeployment is Helpers {
         Key[] memory kS = new Key[](1);
         kS[0] = signer;
 
-        _deploy(superAdmin, admin, kS, IEntryPoint(Constants.EP_V9_ADDRESS), bundlers);
+        _deploy(superAdmin, admin, kS, IEntryPoint(Constants.EP_V9_ADDRESS), webAuthnVerifier, bundlers);
     }
 
     // ------------------------------------------------------------------------------------

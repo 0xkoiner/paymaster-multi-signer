@@ -2,8 +2,10 @@
 pragma solidity 0.8.34;
 
 import { Key } from "../type/Types.sol";
+import { Errors } from "../type/Errors.sol";
 import { Paymaster } from "./Paymaster.sol";
 import { KeyLib } from "../library/KeyLib.sol";
+import { IWebAuthnVerifier } from "../interface/IWebAuthnVerifier.sol";
 import { IEntryPoint } from "@account-abstraction/contracts/interfaces/IEntryPoint.sol";
 
 contract PaymasterEntry is Paymaster {
@@ -14,6 +16,7 @@ contract PaymasterEntry is Paymaster {
         Key memory _admin,
         Key[] memory _signers,
         IEntryPoint _entryPoint,
+        IWebAuthnVerifier _webAuthnVerifier,
         address[] memory _allowedBundlers
     ) {
         if (!_superAdmin._isSuperAdmin()) revert();
@@ -39,7 +42,10 @@ contract PaymasterEntry is Paymaster {
             }
         }
 
-        if (address(_entryPoint) == address(0)) revert();
+        if (address(_entryPoint) == address(0) || address(_webAuthnVerifier) == address(0)) {
+            revert Errors.AddressZero();
+        }
         entryPoint = _entryPoint;
+        webAuthnVerifier = _webAuthnVerifier;
     }
 }

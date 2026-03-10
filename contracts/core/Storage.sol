@@ -2,11 +2,14 @@
 pragma solidity 0.8.34;
 
 import { LibBytes } from "@solady/src/utils/LibBytes.sol";
+import { IWebAuthnVerifier } from "../interface/IWebAuthnVerifier.sol";
 import { EnumerableSetLib } from "@solady/src/utils/EnumerableSetLib.sol";
 import { IEntryPoint } from "@account-abstraction/contracts/interfaces/IEntryPoint.sol";
 
 contract Storage {
     IEntryPoint public immutable entryPoint;
+
+    IWebAuthnVerifier public immutable webAuthnVerifier;
 
     mapping(address account => bool isValidSigner) public signers;
 

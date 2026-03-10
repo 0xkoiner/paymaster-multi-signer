@@ -3,6 +3,7 @@ pragma solidity 0.8.34;
 
 library Errors {
     error KillSwitch();
+    error AddressZero();
     error KeyAuthorized();
     error PreFundTooHigh();
     error KeyDoesNotExist();
