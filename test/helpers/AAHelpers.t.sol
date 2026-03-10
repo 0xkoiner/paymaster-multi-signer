@@ -81,7 +81,9 @@ contract AAHelpers is Data {
                 uint48(0)
             );
 
-            bytes32 hash = SignatureCheckerLib.toEthSignedMessageHash(IPaymaster(address(paymaster)).getHash(0, u[0]));
+            bytes32 hash = SignatureCheckerLib.toEthSignedMessageHash(
+                IPaymaster(address(paymaster)).getHash(0, u[0], _signerType)
+            );
 
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(__PAYMASTER_SIGNER_EOA, hash);
 
@@ -106,7 +108,9 @@ contract AAHelpers is Data {
                 __PAYMASTER_SUPER_ADMIN_ADDRESS_EOA
             );
 
-            bytes32 hash = SignatureCheckerLib.toEthSignedMessageHash(IPaymaster(address(paymaster)).getHash(1, u[0]));
+            bytes32 hash = SignatureCheckerLib.toEthSignedMessageHash(
+                IPaymaster(address(paymaster)).getHash(1, u[0], _signerType)
+            );
 
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(__PAYMASTER_SIGNER_EOA, hash);
 

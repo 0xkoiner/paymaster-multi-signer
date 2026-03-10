@@ -38,7 +38,7 @@ library PaymasterLib {
     function _parseVerifyingConfig(bytes calldata _paymasterConfig)
         internal
         pure
-        returns (uint48, uint48, bytes calldata)
+        returns (uint48, uint48, uint8, bytes calldata)
     {
         if (_paymasterConfig.length < Types.VERIFYING_PAYMASTER_DATA_LENGTH) {
             revert Errors.PaymasterConfigLengthInvalid();
@@ -52,7 +52,7 @@ library PaymasterLib {
         if (signerType > uint8(type(SignerType).max)) revert Errors.IncorrectSignerType();
         signature._validateSignatureLength(signerType);
 
-        return (validUntil, validAfter, signature);
+        return (validUntil, validAfter, signerType, signature);
     }
 
     function _parseErc20Config(bytes calldata _paymasterConfig)

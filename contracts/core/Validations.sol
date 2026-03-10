@@ -4,6 +4,7 @@ pragma solidity 0.8.34;
 import { Key } from "../type/Types.sol";
 import { Events } from "../type/Events.sol";
 import { Errors } from "../type/Errors.sol";
+import { SignerType } from "../type/Types.sol";
 import { KeyLib } from "../library/KeyLib.sol";
 import { BasePaymaster } from "./BasePaymaster.sol";
 import { LibBytes } from "@solady/src/utils/LibBytes.sol";
@@ -89,13 +90,31 @@ abstract contract Validations is BasePaymaster {
         internal
         returns (bytes memory, uint256)
     {
-        (uint48 validUntil, uint48 validAfter, bytes calldata signature) = _paymasterConfig._parseVerifyingConfig();
+        return _executeVerifyingMode(_userOp, _paymasterConfig, _userOpHash);
+    }
 
-        bytes32 hash = MessageHashUtils.toEthSignedMessageHash(getHash(Types.VERIFYING_MODE, _userOp));
-        address recoveredSigner = ECDSA.recover(hash, signature);
+    function _executeVerifyingMode(
+        PackedUserOperation calldata _userOp,
+        bytes calldata _paymasterConfig,
+        bytes32 _userOpHash
+    )
+        private
+        returns (bytes memory, uint256)
+    {
+        (uint48 validUntil, uint48 validAfter, uint8 signerType, bytes calldata signature) =
+            _paymasterConfig._parseVerifyingConfig();
 
-        Key memory key = getKey(recoveredSigner.hash());
-        bool isSignatureValid = key._keyValidation();
+        bytes32 hash;
+        {
+            hash = MessageHashUtils.toEthSignedMessageHash(getHash(Types.VERIFYING_MODE, _userOp, SignerType(signerType)));
+        }
+
+        bool isSignatureValid;
+        {
+            address recoveredSigner = ECDSA.recover(hash, signature);
+            Key memory key = getKey(recoveredSigner.hash());
+            isSignatureValid = key._keyValidation();
+        }
 
         uint256 validationData = _packValidationData(!isSignatureValid, validUntil, validAfter);
 
@@ -119,11 +138,11 @@ abstract contract Validations is BasePaymaster {
         uint256 validationData;
 
         {
-            bytes32 hash = MessageHashUtils.toEthSignedMessageHash(getHash(_mode, _userOp));
+            bytes32 hash = MessageHashUtils.toEthSignedMessageHash(getHash(_mode, _userOp, SignerType(cfg.signerType)));
             address recoveredSigner = ECDSA.recover(hash, cfg.signature);
 
             Key memory key = getKey(recoveredSigner.hash());
-            bool isSignatureValid = key._keyValidation();
+            isSignatureValid = key._keyValidation();
 
             validationData = _packValidationData(!isSignatureValid, cfg.validUntil, cfg.validAfter);
         }
@@ -214,9 +233,20 @@ abstract contract Validations is BasePaymaster {
         );
     }
 
-    function getHash(uint8 _mode, PackedUserOperation calldata _userOp) public view virtual returns (bytes32) {
+    function getHash(
+        uint8 _mode,
+        PackedUserOperation calldata _userOp,
+        SignerType _signerType
+    )
+        public
+        view
+        virtual
+        returns (bytes32)
+    {
         if (_mode == Types.VERIFYING_MODE) {
-            return _getHash(_userOp, Types.MODE_AND_ALLOW_ALL_BUNDLERS_LENGTH + Types.VERIFYING_PAYMASTER_DATA_LENGTH);
+            return _getHash(
+                _userOp, Types.MODE_AND_ALLOW_ALL_BUNDLERS_LENGTH + Types.VERIFYING_PAYMASTER_DATA_LENGTH, _signerType
+            );
         } else {
             uint8 paymasterDataLength = Types.MODE_AND_ALLOW_ALL_BUNDLERS_LENGTH + Types.ERC20_PAYMASTER_DATA_LENGTH;
 
@@ -241,13 +271,14 @@ abstract contract Validations is BasePaymaster {
                 paymasterDataLength += 20;
             }
 
-            return _getHash(_userOp, paymasterDataLength);
+            return _getHash(_userOp, paymasterDataLength, _signerType);
         }
     }
 
     function _getHash(
         PackedUserOperation calldata _userOp,
-        uint256 _paymasterDataLength
+        uint256 _paymasterDataLength,
+        SignerType _signerType
     )
         internal
         view
@@ -262,7 +293,8 @@ abstract contract Validations is BasePaymaster {
                 _userOp.gasFees,
                 keccak256(_userOp.initCode),
                 keccak256(_userOp.callData),
-                keccak256(_userOp.paymasterAndData[:Types.PAYMASTER_DATA_OFFSET + _paymasterDataLength])
+                keccak256(_userOp.paymasterAndData[:Types.PAYMASTER_DATA_OFFSET + _paymasterDataLength]),
+                _signerType
             )
         );
 
