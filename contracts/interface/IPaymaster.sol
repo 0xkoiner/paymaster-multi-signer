@@ -6,7 +6,14 @@ import { PackedUserOperation } from "lib/account-abstraction-v9/contracts/interf
 
 interface IPaymaster {
     function deposit() external payable;
-    function getHash(uint8 _mode, PackedUserOperation calldata _userOp, SignerType _signerType) external view returns (bytes32);
+    function getHash(
+        uint8 _mode,
+        PackedUserOperation calldata _userOp,
+        SignerType _signerType
+    )
+        external
+        view
+        returns (bytes32);
     function validatePaymasterUserOp(
         PackedUserOperation calldata _userOp,
         bytes32 _userOpHash,

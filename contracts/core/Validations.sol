@@ -106,7 +106,8 @@ abstract contract Validations is BasePaymaster {
 
         bytes32 hash;
         {
-            hash = MessageHashUtils.toEthSignedMessageHash(getHash(Types.VERIFYING_MODE, _userOp, SignerType(signerType)));
+            hash =
+                MessageHashUtils.toEthSignedMessageHash(getHash(Types.VERIFYING_MODE, _userOp, SignerType(signerType)));
         }
 
         bool isSignatureValid;

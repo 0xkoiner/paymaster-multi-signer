@@ -7,7 +7,16 @@ import { Eip7702Support } from "../library/Eip7702Support.sol";
 import { PackedUserOperation } from "@account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 
 abstract contract Paymaster is Validations {
-    function getHash(uint8 _mode, PackedUserOperation calldata _userOp, SignerType _signerType) public view override returns (bytes32) {
+    function getHash(
+        uint8 _mode,
+        PackedUserOperation calldata _userOp,
+        SignerType _signerType
+    )
+        public
+        view
+        override
+        returns (bytes32)
+    {
         bytes32 overrideInitCodeHash = Eip7702Support._getEip7702InitCodeHashOverride(_userOp);
         bytes32 originalHash = super.getHash(_mode, _userOp, _signerType);
         return keccak256(abi.encode(originalHash, overrideInitCodeHash));
