@@ -90,17 +90,6 @@ abstract contract Validations is BasePaymaster {
         internal
         returns (bytes memory, uint256)
     {
-        return _executeVerifyingMode(_userOp, _paymasterConfig, _userOpHash);
-    }
-
-    function _executeVerifyingMode(
-        PackedUserOperation calldata _userOp,
-        bytes calldata _paymasterConfig,
-        bytes32 _userOpHash
-    )
-        private
-        returns (bytes memory, uint256)
-    {
         (uint48 validUntil, uint48 validAfter, uint8 signerType, bytes calldata signature) =
             _paymasterConfig._parseVerifyingConfig();
 
