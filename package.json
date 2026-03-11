@@ -5,5 +5,8 @@
     "@noble/curves": "^1.8.0",
     "@noble/hashes": "^1.7.0",
     "ox": "^0.6.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0"
   }
 }

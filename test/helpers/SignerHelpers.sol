@@ -65,13 +65,12 @@ contract SignerHelpers is Etch {
         internal
         returns (bytes memory signature, P256PubKey memory pK)
     {
-        string[] memory cmd = new string[](6);
+        string[] memory cmd = new string[](5);
         cmd[0] = "npx";
-        cmd[1] = "ts-node";
-        cmd[2] = "--esm";
-        cmd[3] = "script/P256.ts";
-        cmd[4] = vm.toString(_hash);
-        cmd[5] = _prehash ? "non-extractable" : "extractable";
+        cmd[1] = "tsx";
+        cmd[2] = "script/P256.ts";
+        cmd[3] = vm.toString(_hash);
+        cmd[4] = _prehash ? "non-extractable" : "extractable";
         signature = vm.ffi(cmd);
         (,, pK.qx, pK.qy,) = signature._unpackP256Signature();
     }
