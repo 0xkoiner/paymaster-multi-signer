@@ -10,6 +10,7 @@ import { BasePaymaster } from "./BasePaymaster.sol";
 import { LibBytes } from "@solady/src/utils/LibBytes.sol";
 import { PaymasterLib } from "../library/PaymasterLib.sol";
 import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
+import { EfficientHashLib } from "@solady/src/utils/EfficientHashLib.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { _packValidationData } from "@account-abstraction/contracts/core/Helpers.sol";
 import { UserOperationLib } from "@account-abstraction/contracts/core/UserOperationLib.sol";
@@ -101,9 +102,17 @@ abstract contract Validations is BasePaymaster {
 
         bool isSignatureValid;
         {
-            address recoveredSigner = ECDSA.recover(hash, signature);
-            Key memory key = getKey(recoveredSigner.hash());
-            isSignatureValid = key._keyValidation();
+            if (signerType == uint8(SignerType.P256)) {
+                (bytes32 r, bytes32 s, bytes32 qx, bytes32 qy, bool prehash) = signature._unpackP256Signature();
+                bytes32 digest = prehash ? EfficientHashLib.sha2(hash) : hash;
+                isSignatureValid = webAuthnVerifier.verifyP256Signature(digest, r, s, qx, qy);
+            } else if (signerType == uint8(SignerType.WebAuthnP256)) {
+                // send WebAuthn verification
+            } else if (signerType == uint8(SignerType.Secp256k1)) {
+                address recoveredSigner = ECDSA.recover(hash, signature);
+                Key memory key = getKey(recoveredSigner.hash());
+                isSignatureValid = key._keyValidation();
+            }
         }
 
         uint256 validationData = _packValidationData(!isSignatureValid, validUntil, validAfter);

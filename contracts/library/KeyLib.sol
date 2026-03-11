@@ -71,8 +71,8 @@ library KeyLib {
 
             switch _signerType
             case 0x00 {
-                // P256: length must be 128
-                if iszero(eq(len, 128)) {
+                // P256: length must be 128 (extractable) or 129 (non-extractable flag)
+                if iszero(or(eq(len, 128), eq(len, 129))) {
                     mstore(0x00, 0xf95eeeac)
                     revert(0x1c, 0x04)
                 }
@@ -87,6 +87,22 @@ library KeyLib {
                     revert(0x1c, 0x04)
                 }
             }
+        }
+    }
+
+    function _unpackP256Signature(bytes memory _signature)
+        internal
+        pure
+        returns (bytes32 r, bytes32 s, bytes32 qx, bytes32 qy, bool prehash)
+    {
+        assembly {
+            let len := mload(_signature)
+            r := mload(add(_signature, 0x20))
+            s := mload(add(_signature, 0x40))
+            qx := mload(add(_signature, 0x60))
+            qy := mload(add(_signature, 0x80))
+            // If 129 bytes, last byte is the prehash flag (non-extractable key)
+            if eq(len, 129) { prehash := iszero(iszero(byte(0, mload(add(_signature, 0xa0))))) }
         }
     }
 }

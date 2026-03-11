@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.34;
 
-import { Etch } from "../data/Etch.t.sol";
 import { Constants } from "../data/Constants.sol";
+import { SignerHelpers } from "./SignerHelpers.sol";
 import { SignerType } from "../../contracts/type/Types.sol";
 import { IPaymaster } from "../../contracts/interface/IPaymaster.sol";
 import { SignatureCheckerLib } from "lib/solady-v0.1.26/src/utils/SignatureCheckerLib.sol";
 import { IEntryPoint } from "lib/account-abstraction-v9/contracts/interfaces/IEntryPoint.sol";
 import { PackedUserOperation } from "lib/account-abstraction-v9/contracts/interfaces/PackedUserOperation.sol";
 
-contract AAHelpers is Etch {
+contract AAHelpers is SignerHelpers {
     // ------------------------------------------------------------------------------------
     //
     //                                       Enum/Structs
