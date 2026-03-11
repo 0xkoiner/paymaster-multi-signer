@@ -58,7 +58,13 @@ contract SignerHelpers is Etch {
         return abi.encode(_x, _y);
     }
 
-    function _signHashWithP256(bytes32 _hash, bool _prehash) internal returns (bytes memory signature, P256PubKey memory pK) {
+    function _signHashWithP256(
+        bytes32 _hash,
+        bool _prehash
+    )
+        internal
+        returns (bytes memory signature, P256PubKey memory pK)
+    {
         string[] memory cmd = new string[](6);
         cmd[0] = "npx";
         cmd[1] = "ts-node";
@@ -67,7 +73,7 @@ contract SignerHelpers is Etch {
         cmd[4] = vm.toString(_hash);
         cmd[5] = _prehash ? "non-extractable" : "extractable";
         signature = vm.ffi(cmd);
-        (, , pK.qx, pK.qy,) = signature._unpackP256Signature();
+        (,, pK.qx, pK.qy,) = signature._unpackP256Signature();
     }
 
     function _authorizeSigner(P256PubKey memory _pK, SignerType _signerType) internal {

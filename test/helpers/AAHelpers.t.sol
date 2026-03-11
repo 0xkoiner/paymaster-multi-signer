@@ -87,9 +87,8 @@ contract AAHelpers is SignerHelpers {
             if (_signerType == SignerType.P256) {
                 (bytes memory signature, P256PubKey memory pK) = _signHashWithP256(hash, prehash);
                 _authorizeSigner(pK, _signerType);
-                u[0].paymasterAndData = abi.encodePacked(
-                    u[0].paymasterAndData, abi.encodePacked(_signerType, signature)
-                );
+                u[0].paymasterAndData =
+                    abi.encodePacked(u[0].paymasterAndData, abi.encodePacked(_signerType, signature));
             } else if (_signerType == SignerType.WebAuthnP256) {
                 // impl
             } else if (_signerType == SignerType.Secp256k1) {
