@@ -110,7 +110,11 @@ abstract contract Validations is BasePaymaster {
                     isSignatureValid = webAuthnVerifier.verifyP256Signature(digest, r, s, qx, qy);
                 }
             } else if (signerType == uint8(SignerType.WebAuthnP256)) {
-                // send WebAuthn verification
+                (bytes32 qx, bytes32 qy) = signature._unpackWebAuthnCoordinats();
+                Key memory key = getKey(qx.hash(qy));
+                if (key._keyValidation()) {
+                    isSignatureValid = webAuthnVerifier.verifyEncodedSignature(hash, true, signature, qx, qy);
+                }
             } else if (signerType == uint8(SignerType.Secp256k1)) {
                 address recoveredSigner = ECDSA.recover(hash, signature);
                 Key memory key = getKey(recoveredSigner.hash());

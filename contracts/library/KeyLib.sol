@@ -4,6 +4,7 @@ pragma solidity 0.8.34;
 import { Errors } from "../type/Errors.sol";
 import { Key, SignerType } from "../type/Types.sol";
 import { LibBytes } from "@solady/src/utils/LibBytes.sol";
+import { WebAuthn } from "../../contracts/library/WebAuthn.sol";
 import { EfficientHashLib } from "@solady/src/utils/EfficientHashLib.sol";
 import { FixedPointMathLib as Math } from "@solady/src/utils/FixedPointMathLib.sol";
 
@@ -107,6 +108,14 @@ library KeyLib {
             qy := mload(add(_signature, 0x80))
             // If 129 bytes, last byte is the prehash flag (non-extractable key)
             if eq(len, 129) { prehash := iszero(iszero(byte(0, mload(add(_signature, 0xa0))))) }
+        }
+    }
+
+    function _unpackWebAuthnCoordinats(bytes memory _signature) internal pure returns (bytes32 qx, bytes32 qy) {
+        uint256 len = _signature.length;
+        assembly {
+            qx := mload(add(_signature, len))
+            qy := mload(add(_signature, sub(len, 0x20)))
         }
     }
 }

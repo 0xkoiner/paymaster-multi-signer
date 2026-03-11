@@ -66,7 +66,7 @@ contract WebAuthnVerifier {
      * @return isValid Whether the signature is valid
      */
     function verifyEncodedSignature(
-        bytes memory challenge,
+        bytes32 challenge,
         bool requireUserVerification,
         bytes memory encodedAuth,
         bytes32 x,
@@ -77,8 +77,9 @@ contract WebAuthnVerifier {
         returns (bool isValid)
     {
         WebAuthn.WebAuthnAuth memory auth = WebAuthn.tryDecodeAuth(encodedAuth);
+        bytes memory challengeBytes = toBytes(challenge);
 
-        isValid = WebAuthn.verify(challenge, requireUserVerification, auth, x, y);
+        isValid = WebAuthn.verify(challengeBytes, requireUserVerification, auth, x, y);
 
         return isValid;
     }

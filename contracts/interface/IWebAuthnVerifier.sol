@@ -19,7 +19,7 @@ interface IWebAuthnVerifier {
         returns (bool isValid);
 
     function verifyEncodedSignature(
-        bytes memory challenge,
+        bytes32 challenge,
         bool requireUserVerification,
         bytes memory encodedAuth,
         bytes32 x,

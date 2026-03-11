@@ -5,7 +5,9 @@ import { Etch } from "../data/Etch.t.sol";
 import { Constants } from "../data/Constants.sol";
 import { P256 } from "../../contracts/library/P256.sol";
 import { KeyLib } from "../../contracts/library/KeyLib.sol";
+import { WebAuthn } from "../../contracts/library/WebAuthn.sol";
 import { Key, SignerType } from "../../contracts/type/Types.sol";
+import { WebAuthn } from "../../../contracts/library/WebAuthn.sol";
 
 contract SignerHelpers is Etch {
     using KeyLib for *;
@@ -26,6 +28,7 @@ contract SignerHelpers is Etch {
         bytes32 qx;
         bytes32 qy;
     }
+
     // ------------------------------------------------------------------------------------
     //
     //                                       Storage
@@ -56,6 +59,18 @@ contract SignerHelpers is Etch {
 
     function _encodeKey(bytes32 _x, bytes32 _y) internal pure returns (bytes memory) {
         return abi.encode(_x, _y);
+    }
+
+    function _encodeWebAuthn(
+        WebAuthn.WebAuthnAuth memory _webAuthnAuth,
+        bytes32 _x,
+        bytes32 _y
+    )
+        internal
+        pure
+        returns (bytes memory)
+    {
+        return abi.encodePacked(WebAuthn.encodeAuth(_webAuthnAuth), _x, _y);
     }
 
     function _signHashWithP256(
