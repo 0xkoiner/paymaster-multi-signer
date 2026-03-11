@@ -34,6 +34,7 @@ contract AAHelpers is SignerHelpers {
         bytes data;
     }
 
+    uint256 constant internal GAS = 1_900_000;
     // ------------------------------------------------------------------------------------
     //
     //                                       Helpers
@@ -66,15 +67,15 @@ contract AAHelpers is SignerHelpers {
         PackedUserOperation[] memory u = new PackedUserOperation[](1);
         u[0].sender = _sender;
         u[0].nonce = _getNonce(_sender);
-        u[0].accountGasLimits = bytes32(uint256(1_000_000 | (1_000_000 << 128)));
-        u[0].gasFees = bytes32(uint256(1_000_000 | (1_000_000 << 128)));
+        u[0].accountGasLimits = bytes32(uint256(GAS | (GAS << 128)));
+        u[0].gasFees = bytes32(uint256(GAS | (GAS << 128)));
         u[0].callData = _callData;
 
         if (_sponsorType == Sponsor_Type.ETH) {
             u[0].paymasterAndData = abi.encodePacked(
                 address(paymaster),
-                uint128(1_000_000),
-                uint128(1_000_000),
+                uint128(GAS),
+                uint128(GAS),
                 _allowAllBundlers,
                 type(uint48).max,
                 uint48(0)
@@ -90,7 +91,10 @@ contract AAHelpers is SignerHelpers {
                 u[0].paymasterAndData =
                     abi.encodePacked(u[0].paymasterAndData, abi.encodePacked(_signerType, signature));
             } else if (_signerType == SignerType.WebAuthnP256) {
-                // impl
+                (bytes memory signature, P256PubKey memory pK) = _signHashWithWebAuthn(hash);
+                _authorizeSigner(pK, _signerType);
+                u[0].paymasterAndData =
+                    abi.encodePacked(u[0].paymasterAndData, abi.encodePacked(_signerType, signature));
             } else if (_signerType == SignerType.Secp256k1) {
                 (uint8 v, bytes32 r, bytes32 s) = vm.sign(__PAYMASTER_SIGNER_EOA, hash);
                 u[0].paymasterAndData = abi.encodePacked(u[0].paymasterAndData, abi.encodePacked(_signerType, r, s, v));
@@ -102,16 +106,16 @@ contract AAHelpers is SignerHelpers {
         } else if (_sponsorType == Sponsor_Type.ERC20) {
             u[0].paymasterAndData = abi.encodePacked(
                 address(paymaster),
-                uint128(1_000_000),
-                uint128(1_000_000),
+                uint128(GAS),
+                uint128(GAS),
                 uint8(1) | uint8(1 << 1),
                 uint8(0),
                 type(uint48).max,
                 uint48(0),
                 address(sponsorERC20),
-                uint128(100_000),
+                uint128(GAS),
                 uint256(1e18),
-                uint128(100_000),
+                uint128(GAS),
                 __PAYMASTER_SUPER_ADMIN_ADDRESS_EOA
             );
 

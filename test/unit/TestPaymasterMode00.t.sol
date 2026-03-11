@@ -225,6 +225,25 @@ contract TestPaymasterMode00 is Helpers {
 
     // ------------------------------------------------------------------------------------
     //
+    //                                         WebAuthn
+    //
+    // ------------------------------------------------------------------------------------
+
+    // Test VERIFYING_MODE with any bundler
+    function test_paymaster_entry_point_mode_0_all_bundlers_webauthn_signer() external {
+        (PackedUserOperation[] memory u, bytes32 userOpHash) = _getUserOp(
+            __7702_ADDRESS_EOA, __7702_EOA, hex"", Sponsor_Type.ETH, Allow_Bundlers.ALL, SignerType.WebAuthnP256
+        );
+
+        vm.prank(Constants.EP_V9_ADDRESS);
+        (bytes memory context, uint256 validationData) = paymaster.validatePaymasterUserOp(u[0], userOpHash, 0);
+        (ValidationData memory data) = _parseValidationData(validationData);
+
+        _assert(data, context);
+    }
+
+    // ------------------------------------------------------------------------------------
+    //
     //                                        Helpers
     //
     // ------------------------------------------------------------------------------------

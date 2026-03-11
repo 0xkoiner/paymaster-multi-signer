@@ -19,8 +19,8 @@ library KeyLib {
         return EfficientHashLib.hash(uint8(SignerType.Secp256k1), uint256(keccak256(abi.encode(_msgSender))));
     }
 
-    function hash(bytes32 _qx, bytes32 _qy) internal pure returns (bytes32) {
-        return EfficientHashLib.hash(uint8(SignerType.P256), uint256(keccak256(abi.encode(_qx, _qy))));
+    function hash(bytes32 _qx, bytes32 _qy, SignerType _signerType) internal pure returns (bytes32) {
+        return EfficientHashLib.hash(uint8(_signerType), uint256(keccak256(abi.encode(_qx, _qy))));
     }
 
     function _isSuperAdmin(LibBytes.BytesStorage storage _s) internal view returns (bool) {
@@ -114,8 +114,8 @@ library KeyLib {
     function _unpackWebAuthnCoordinats(bytes memory _signature) internal pure returns (bytes32 qx, bytes32 qy) {
         uint256 len = _signature.length;
         assembly {
-            qx := mload(add(_signature, len))
-            qy := mload(add(_signature, sub(len, 0x20)))
+            qx := mload(add(_signature, sub(len, 0x20)))
+            qy := mload(add(_signature, len))
         }
     }
 }

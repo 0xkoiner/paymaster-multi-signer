@@ -155,7 +155,7 @@ contract TestPaymasterMode01 is Helpers {
         assertEq(postOpContext.token, address(sponsorERC20), "Not same token");
         assertEq(postOpContext.treasury, __PAYMASTER_SUPER_ADMIN_ADDRESS_EOA, "Not same treasury");
         assertEq(postOpContext.exchangeRate, uint256(1e18), "Not same exchangeRate");
-        assertEq(postOpContext.postOpGas, uint128(100_000), "Not same postOpGas");
+        assertEq(postOpContext.postOpGas, uint128(GAS), "Not same postOpGas");
         assertEq(postOpContext.userOpHash, _userOpHash, "Not same userOpHash");
         assertEq(postOpContext.maxFeePerGas, 0, "Not same maxFeePerGas");
         assertEq(postOpContext.maxPriorityFeePerGas, 0, "Not same maxPriorityFeePerGas");

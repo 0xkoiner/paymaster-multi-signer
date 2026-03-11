@@ -37,6 +37,13 @@ contract TestWebAuthnSignature is Helpers {
         assertTrue(isValid, "Not valid signature");
     }
 
+    function test_webauthn_with_ffi() external {
+        (bytes memory signature, P256PubKey memory pK) = _signHashWithWebAuthn(hash);
+
+        bool isValid = webAuthnVerifier.verifyEncodedSignature(hash, true, signature, pK.qx, pK.qy);
+        assertTrue(isValid, "Not valid signature");
+    }
+
     function _assert(bytes memory _signature) internal view {
         WebAuthn.WebAuthnAuth memory auth = WebAuthn.tryDecodeAuth(_signature);
 

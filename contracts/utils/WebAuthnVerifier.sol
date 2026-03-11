@@ -77,6 +77,7 @@ contract WebAuthnVerifier {
         returns (bool isValid)
     {
         WebAuthn.WebAuthnAuth memory auth = WebAuthn.tryDecodeAuth(encodedAuth);
+
         bytes memory challengeBytes = toBytes(challenge);
 
         isValid = WebAuthn.verify(challengeBytes, requireUserVerification, auth, x, y);

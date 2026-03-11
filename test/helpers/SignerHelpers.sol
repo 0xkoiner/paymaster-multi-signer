@@ -7,7 +7,6 @@ import { P256 } from "../../contracts/library/P256.sol";
 import { KeyLib } from "../../contracts/library/KeyLib.sol";
 import { WebAuthn } from "../../contracts/library/WebAuthn.sol";
 import { Key, SignerType } from "../../contracts/type/Types.sol";
-import { WebAuthn } from "../../../contracts/library/WebAuthn.sol";
 
 contract SignerHelpers is Etch {
     using KeyLib for *;
@@ -88,6 +87,16 @@ contract SignerHelpers is Etch {
         cmd[4] = _prehash ? "non-extractable" : "extractable";
         signature = vm.ffi(cmd);
         (,, pK.qx, pK.qy,) = signature._unpackP256Signature();
+    }
+
+    function _signHashWithWebAuthn(bytes32 _hash) internal returns (bytes memory signature, P256PubKey memory pK) {
+        string[] memory cmd = new string[](4);
+        cmd[0] = "npx";
+        cmd[1] = "tsx";
+        cmd[2] = "script/WebAuthn.ts";
+        cmd[3] = vm.toString(_hash);
+        signature = vm.ffi(cmd);
+        (pK.qx, pK.qy) = signature._unpackWebAuthnCoordinats();
     }
 
     function _authorizeSigner(P256PubKey memory _pK, SignerType _signerType) internal {
