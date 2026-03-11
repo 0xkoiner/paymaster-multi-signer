@@ -38,12 +38,19 @@ contract TestPaymasterMode00 is Helpers {
 
         _deployment();
 
+        _ethc();
         _etch7702(__7702_ADDRESS_EOA, address(simple7702Account));
 
         _deal(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA, Constants.ETH_1);
         _deal(__7702_ADDRESS_EOA, Constants.ETH_1);
         _depositPaymaster();
     }
+
+    // ------------------------------------------------------------------------------------
+    //
+    //                                       EOA
+    //
+    // ------------------------------------------------------------------------------------
 
     // Test VERIFYING_MODE with any bundler
     function test_paymaster_entry_point_mode_0_all_bundlers_eoa_signer() external {
@@ -89,6 +96,126 @@ contract TestPaymasterMode00 is Helpers {
         bytes memory data = abi.encodeWithSelector(BaseAccount.execute.selector, random, 0.1 ether, hex"");
         (PackedUserOperation[] memory u,) = _getUserOp(
             __7702_ADDRESS_EOA, __7702_EOA, data, Sponsor_Type.ETH, Allow_Bundlers.SPECIFIC, SignerType.Secp256k1
+        );
+
+        vm.prank(bundlers[0], bundlers[0]);
+        entryPoint.handleOps(u, payable(bundlers[0]));
+        _assert(false, 0.1 ether);
+    }
+
+    // ------------------------------------------------------------------------------------
+    //
+    //                                         P256
+    //
+    // ------------------------------------------------------------------------------------
+
+    // Test VERIFYING_MODE with any bundler
+    function test_paymaster_entry_point_mode_0_all_bundlers_p256_extr_signer() external {
+        prehash = false;
+        (PackedUserOperation[] memory u, bytes32 userOpHash) =
+            _getUserOp(__7702_ADDRESS_EOA, __7702_EOA, hex"", Sponsor_Type.ETH, Allow_Bundlers.ALL, SignerType.P256);
+
+        vm.prank(Constants.EP_V9_ADDRESS);
+        (bytes memory context, uint256 validationData) = paymaster.validatePaymasterUserOp(u[0], userOpHash, 0);
+        (ValidationData memory data) = _parseValidationData(validationData);
+
+        _assert(data, context);
+    }
+
+    // Test VERIFYING_MODE with any bundler
+    function test_paymaster_entry_point_mode_0_all_bundlers_p256_non_extr_signer() external {
+        prehash = true;
+        (PackedUserOperation[] memory u, bytes32 userOpHash) =
+            _getUserOp(__7702_ADDRESS_EOA, __7702_EOA, hex"", Sponsor_Type.ETH, Allow_Bundlers.ALL, SignerType.P256);
+
+        vm.prank(Constants.EP_V9_ADDRESS);
+        (bytes memory context, uint256 validationData) = paymaster.validatePaymasterUserOp(u[0], userOpHash, 0);
+        (ValidationData memory data) = _parseValidationData(validationData);
+
+        _assert(data, context);
+    }
+
+    // Test VERIFYING_MODE with specific bundler
+    function test_paymaster_entry_point_mode_0_check_bundler_p256_extr_signer() external {
+        prehash = false;
+
+        (PackedUserOperation[] memory u, bytes32 userOpHash) = _getUserOp(
+            __7702_ADDRESS_EOA, __7702_EOA, hex"", Sponsor_Type.ETH, Allow_Bundlers.SPECIFIC, SignerType.P256
+        );
+
+        vm.prank(Constants.EP_V9_ADDRESS, bundlers[0]);
+        (bytes memory context, uint256 validationData) = paymaster.validatePaymasterUserOp(u[0], userOpHash, 0);
+        (ValidationData memory data) = _parseValidationData(validationData);
+
+        _assert(data, context);
+    }
+
+    // Test VERIFYING_MODE with specific bundler
+    function test_paymaster_entry_point_mode_0_check_bundler_p256_non_extr_signer() external {
+        prehash = true;
+
+        (PackedUserOperation[] memory u, bytes32 userOpHash) = _getUserOp(
+            __7702_ADDRESS_EOA, __7702_EOA, hex"", Sponsor_Type.ETH, Allow_Bundlers.SPECIFIC, SignerType.P256
+        );
+
+        vm.prank(Constants.EP_V9_ADDRESS, bundlers[0]);
+        (bytes memory context, uint256 validationData) = paymaster.validatePaymasterUserOp(u[0], userOpHash, 0);
+        (ValidationData memory data) = _parseValidationData(validationData);
+
+        _assert(data, context);
+    }
+
+    // Test VERIFYING_MODE with any bundler full cycle
+    function test_paymaster_7702_account_mode_0_all_bundlers_p256_extr_signer() external {
+        prehash = false;
+
+        _assert(true, 0);
+        bytes memory data = abi.encodeWithSelector(BaseAccount.execute.selector, random, 0.1 ether, hex"");
+        (PackedUserOperation[] memory u,) =
+            _getUserOp(__7702_ADDRESS_EOA, __7702_EOA, data, Sponsor_Type.ETH, Allow_Bundlers.ALL, SignerType.P256);
+
+        vm.prank(bundlers[0], bundlers[0]);
+        entryPoint.handleOps(u, payable(bundlers[0]));
+        _assert(false, 0.1 ether);
+    }
+
+    // Test VERIFYING_MODE with any bundler full cycle
+    function test_paymaster_7702_account_mode_0_all_bundlers_p256_non_extr_signer() external {
+        prehash = true;
+
+        _assert(true, 0);
+        bytes memory data = abi.encodeWithSelector(BaseAccount.execute.selector, random, 0.1 ether, hex"");
+        (PackedUserOperation[] memory u,) =
+            _getUserOp(__7702_ADDRESS_EOA, __7702_EOA, data, Sponsor_Type.ETH, Allow_Bundlers.ALL, SignerType.P256);
+
+        vm.prank(bundlers[0], bundlers[0]);
+        entryPoint.handleOps(u, payable(bundlers[0]));
+        _assert(false, 0.1 ether);
+    }
+
+    // Test VERIFYING_MODE with specific bundler full cycle
+    function test_paymaster_7702_account_mode_0_check_bundler_p256_extr_signer() external {
+        prehash = false;
+
+        _assert(true, 0);
+        bytes memory data = abi.encodeWithSelector(BaseAccount.execute.selector, random, 0.1 ether, hex"");
+        (PackedUserOperation[] memory u,) = _getUserOp(
+            __7702_ADDRESS_EOA, __7702_EOA, data, Sponsor_Type.ETH, Allow_Bundlers.SPECIFIC, SignerType.P256
+        );
+
+        vm.prank(bundlers[0], bundlers[0]);
+        entryPoint.handleOps(u, payable(bundlers[0]));
+        _assert(false, 0.1 ether);
+    }
+
+    // Test VERIFYING_MODE with specific bundler full cycle
+    function test_paymaster_7702_account_mode_0_check_bundler_p256_non_extr_signer() external {
+        prehash = true;
+
+        _assert(true, 0);
+        bytes memory data = abi.encodeWithSelector(BaseAccount.execute.selector, random, 0.1 ether, hex"");
+        (PackedUserOperation[] memory u,) = _getUserOp(
+            __7702_ADDRESS_EOA, __7702_EOA, data, Sponsor_Type.ETH, Allow_Bundlers.SPECIFIC, SignerType.P256
         );
 
         vm.prank(bundlers[0], bundlers[0]);

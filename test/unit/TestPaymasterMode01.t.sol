@@ -44,6 +44,7 @@ contract TestPaymasterMode01 is Helpers {
 
         _deployment();
 
+        _ethc();
         _etch7702(__7702_ADDRESS_EOA, address(simple7702Account));
 
         _deal(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA, Constants.ETH_1);

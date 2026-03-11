@@ -61,7 +61,6 @@ contract AAHelpers is SignerHelpers {
         SignerType _signerType
     )
         internal
-        view
         returns (PackedUserOperation[] memory, bytes32 userOpHash)
     {
         PackedUserOperation[] memory u = new PackedUserOperation[](1);
@@ -85,12 +84,19 @@ contract AAHelpers is SignerHelpers {
                 IPaymaster(address(paymaster)).getHash(0, u[0], _signerType)
             );
 
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(__PAYMASTER_SIGNER_EOA, hash);
-
-            u[0].paymasterAndData = abi.encodePacked(u[0].paymasterAndData, abi.encodePacked(_signerType, r, s, v));
+            if (_signerType == SignerType.P256) {
+                u[0].paymasterAndData = abi.encodePacked(
+                    u[0].paymasterAndData, abi.encodePacked(_signerType, _signHashWithP256(hash, prehash))
+                );
+            } else if (_signerType == SignerType.WebAuthnP256) {
+                // impl
+            } else if (_signerType == SignerType.Secp256k1) {
+                (uint8 v, bytes32 r, bytes32 s) = vm.sign(__PAYMASTER_SIGNER_EOA, hash);
+                u[0].paymasterAndData = abi.encodePacked(u[0].paymasterAndData, abi.encodePacked(_signerType, r, s, v));
+            }
 
             userOpHash = IEntryPoint(Constants.EP_V9_ADDRESS).getUserOpHash(u[0]);
-            (v, r, s) = vm.sign(_pk, userOpHash);
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(_pk, userOpHash);
             u[0].signature = abi.encodePacked(r, s, v);
         } else if (_sponsorType == Sponsor_Type.ERC20) {
             u[0].paymasterAndData = abi.encodePacked(
