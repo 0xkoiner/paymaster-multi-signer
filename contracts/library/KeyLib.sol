@@ -18,6 +18,10 @@ library KeyLib {
         return EfficientHashLib.hash(uint8(SignerType.Secp256k1), uint256(keccak256(abi.encode(_msgSender))));
     }
 
+    function hash(bytes32 _qx, bytes32 _qy) internal pure returns (bytes32) {
+        return EfficientHashLib.hash(uint8(SignerType.P256), uint256(keccak256(abi.encode(_qx, _qy))));
+    }
+
     function _isSuperAdmin(LibBytes.BytesStorage storage _s) internal view returns (bool) {
         uint256 encodedLength = _s.length();
         if (encodedLength == uint256(0)) revert Errors.KeyDoesNotExist();

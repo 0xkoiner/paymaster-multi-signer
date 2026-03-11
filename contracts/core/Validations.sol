@@ -104,8 +104,11 @@ abstract contract Validations is BasePaymaster {
         {
             if (signerType == uint8(SignerType.P256)) {
                 (bytes32 r, bytes32 s, bytes32 qx, bytes32 qy, bool prehash) = signature._unpackP256Signature();
-                bytes32 digest = prehash ? EfficientHashLib.sha2(hash) : hash;
-                isSignatureValid = webAuthnVerifier.verifyP256Signature(digest, r, s, qx, qy);
+                Key memory key = getKey(qx.hash(qy));
+                if (key._keyValidation()) {
+                    bytes32 digest = prehash ? EfficientHashLib.sha2(hash) : hash;
+                    isSignatureValid = webAuthnVerifier.verifyP256Signature(digest, r, s, qx, qy);
+                }
             } else if (signerType == uint8(SignerType.WebAuthnP256)) {
                 // send WebAuthn verification
             } else if (signerType == uint8(SignerType.Secp256k1)) {

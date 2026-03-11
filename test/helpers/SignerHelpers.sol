@@ -4,9 +4,12 @@ pragma solidity 0.8.34;
 import { Etch } from "../data/Etch.t.sol";
 import { Constants } from "../data/Constants.sol";
 import { P256 } from "../../contracts/library/P256.sol";
+import { KeyLib } from "../../contracts/library/KeyLib.sol";
 import { Key, SignerType } from "../../contracts/type/Types.sol";
 
 contract SignerHelpers is Etch {
+    using KeyLib for *;
+
     // ------------------------------------------------------------------------------------
     //
     //                                       Enum/Structs
@@ -19,11 +22,17 @@ contract SignerHelpers is Etch {
         SIGNER
     }
 
+    struct P256PubKey {
+        bytes32 qx;
+        bytes32 qy;
+    }
     // ------------------------------------------------------------------------------------
     //
     //                                       Storage
     //
     // ------------------------------------------------------------------------------------
+
+    Key private k;
 
     bool internal transient prehash;
 
@@ -45,7 +54,11 @@ contract SignerHelpers is Etch {
         return abi.encode(_eoa);
     }
 
-    function _signHashWithP256(bytes32 _hash, bool _prehash) internal returns (bytes memory signature) {
+    function _encodeKey(bytes32 _x, bytes32 _y) internal pure returns (bytes memory) {
+        return abi.encode(_x, _y);
+    }
+
+    function _signHashWithP256(bytes32 _hash, bool _prehash) internal returns (bytes memory signature, P256PubKey memory pK) {
         string[] memory cmd = new string[](6);
         cmd[0] = "npx";
         cmd[1] = "ts-node";
@@ -54,5 +67,17 @@ contract SignerHelpers is Etch {
         cmd[4] = vm.toString(_hash);
         cmd[5] = _prehash ? "non-extractable" : "extractable";
         signature = vm.ffi(cmd);
+        (, , pK.qx, pK.qy,) = signature._unpackP256Signature();
+    }
+
+    function _authorizeSigner(P256PubKey memory _pK, SignerType _signerType) internal {
+        k.expiry = uint40(block.timestamp + 1);
+        k.keyType = _signerType;
+        k.isSuperAdmin = false;
+        k.isAdmin = false;
+        k.publicKey = _encodeKey(_pK.qx, _pK.qy);
+
+        vm.prank(address(0xbabe));
+        paymaster.authorize(k);
     }
 }

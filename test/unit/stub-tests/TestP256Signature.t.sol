@@ -17,7 +17,7 @@ contract TestP256Signature is Helpers {
     }
 
     function test_p256_signature_extractable() external {
-        (bytes memory signature) = _signHashWithP256(hash, false);
+        (bytes memory signature,) = _signHashWithP256(hash, false);
         (bytes32 r, bytes32 s, bytes32 qx, bytes32 qy, bool prehash) = signature._unpackP256Signature();
         bool isValid = webAuthnVerifier.verifyP256Signature(hash, r, s, qx, qy);
 
@@ -26,7 +26,7 @@ contract TestP256Signature is Helpers {
     }
 
     function test_p256_signature_non_extractable() external {
-        (bytes memory signature) = _signHashWithP256(hash, true);
+        (bytes memory signature,) = _signHashWithP256(hash, true);
         (bytes32 r, bytes32 s, bytes32 qx, bytes32 qy, bool prehash) = signature._unpackP256Signature();
         bool isValid = webAuthnVerifier.verifyP256Signature(EfficientHashLib.sha2(hash), r, s, qx, qy);
 
