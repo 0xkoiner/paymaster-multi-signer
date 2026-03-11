@@ -34,7 +34,8 @@ contract AAHelpers is SignerHelpers {
         bytes data;
     }
 
-    uint256 constant internal GAS = 1_900_000;
+    uint256 internal constant GAS = 1_900_000;
+
     // ------------------------------------------------------------------------------------
     //
     //                                       Helpers
@@ -73,12 +74,7 @@ contract AAHelpers is SignerHelpers {
 
         if (_sponsorType == Sponsor_Type.ETH) {
             u[0].paymasterAndData = abi.encodePacked(
-                address(paymaster),
-                uint128(GAS),
-                uint128(GAS),
-                _allowAllBundlers,
-                type(uint48).max,
-                uint48(0)
+                address(paymaster), uint128(GAS), uint128(GAS), _allowAllBundlers, type(uint48).max, uint48(0)
             );
 
             bytes32 hash = SignatureCheckerLib.toEthSignedMessageHash(

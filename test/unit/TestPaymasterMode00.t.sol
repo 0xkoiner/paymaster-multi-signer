@@ -242,6 +242,45 @@ contract TestPaymasterMode00 is Helpers {
         _assert(data, context);
     }
 
+    // Test VERIFYING_MODE with specific bundler
+    function test_paymaster_entry_point_mode_0_check_bundler_webauthn_signer() external {
+        (PackedUserOperation[] memory u, bytes32 userOpHash) = _getUserOp(
+            __7702_ADDRESS_EOA, __7702_EOA, hex"", Sponsor_Type.ETH, Allow_Bundlers.SPECIFIC, SignerType.WebAuthnP256
+        );
+
+        vm.prank(Constants.EP_V9_ADDRESS, bundlers[0]);
+        (bytes memory context, uint256 validationData) = paymaster.validatePaymasterUserOp(u[0], userOpHash, 0);
+        (ValidationData memory data) = _parseValidationData(validationData);
+
+        _assert(data, context);
+    }
+
+    // Test VERIFYING_MODE with any bundler full cycle
+    function test_paymaster_7702_account_mode_0_all_bundlers_webauthn_signer() external {
+        _assert(true, 0);
+        bytes memory data = abi.encodeWithSelector(BaseAccount.execute.selector, random, 0.1 ether, hex"");
+        (PackedUserOperation[] memory u,) = _getUserOp(
+            __7702_ADDRESS_EOA, __7702_EOA, data, Sponsor_Type.ETH, Allow_Bundlers.ALL, SignerType.WebAuthnP256
+        );
+
+        vm.prank(bundlers[0], bundlers[0]);
+        entryPoint.handleOps(u, payable(bundlers[0]));
+        _assert(false, 0.1 ether);
+    }
+
+    // Test VERIFYING_MODE with specific bundler full cycle
+    function test_paymaster_7702_account_mode_0_check_bundler_webauthn_signer() external {
+        _assert(true, 0);
+        bytes memory data = abi.encodeWithSelector(BaseAccount.execute.selector, random, 0.1 ether, hex"");
+        (PackedUserOperation[] memory u,) = _getUserOp(
+            __7702_ADDRESS_EOA, __7702_EOA, data, Sponsor_Type.ETH, Allow_Bundlers.SPECIFIC, SignerType.WebAuthnP256
+        );
+
+        vm.prank(bundlers[0], bundlers[0]);
+        entryPoint.handleOps(u, payable(bundlers[0]));
+        _assert(false, 0.1 ether);
+    }
+
     // ------------------------------------------------------------------------------------
     //
     //                                        Helpers
