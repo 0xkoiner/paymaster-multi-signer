@@ -140,18 +140,34 @@ abstract contract Validations is BasePaymaster {
     {
         ERC20PaymasterData memory cfg = _paymasterConfig._parseErc20Config();
 
-        bool isSignatureValid;
-        uint256 validationData;
-
+        bytes32 hash;
         {
-            bytes32 hash = MessageHashUtils.toEthSignedMessageHash(getHash(_mode, _userOp, SignerType(cfg.signerType)));
-            address recoveredSigner = ECDSA.recover(hash, cfg.signature);
-
-            Key memory key = getKey(recoveredSigner.hash());
-            isSignatureValid = key._keyValidation();
-
-            validationData = _packValidationData(!isSignatureValid, cfg.validUntil, cfg.validAfter);
+            hash = MessageHashUtils.toEthSignedMessageHash(getHash(_mode, _userOp, SignerType(cfg.signerType)));
         }
+
+        bool isSignatureValid;
+        {
+            if (cfg.signerType == uint8(SignerType.P256)) {
+                (bytes32 r, bytes32 s, bytes32 qx, bytes32 qy, bool prehash) = cfg.signature._unpackP256Signature();
+                Key memory key = getKey(qx.hash(qy, SignerType.P256));
+                if (key._keyValidation()) {
+                    bytes32 digest = prehash ? EfficientHashLib.sha2(hash) : hash;
+                    isSignatureValid = webAuthnVerifier.verifyP256Signature(digest, r, s, qx, qy);
+                }
+            } else if (cfg.signerType == uint8(SignerType.WebAuthnP256)) {
+                (bytes32 qx, bytes32 qy) = cfg.signature._unpackWebAuthnCoordinats();
+                Key memory key = getKey(qx.hash(qy, SignerType.WebAuthnP256));
+                if (key._keyValidation()) {
+                    isSignatureValid = webAuthnVerifier.verifyEncodedSignature(hash, true, cfg.signature, qx, qy);
+                }
+            } else if (cfg.signerType == uint8(SignerType.Secp256k1)) {
+                address recoveredSigner = ECDSA.recover(hash, cfg.signature);
+                Key memory key = getKey(recoveredSigner.hash());
+                isSignatureValid = key._keyValidation();
+            }
+        }
+
+        uint256 validationData = _packValidationData(!isSignatureValid, cfg.validUntil, cfg.validAfter);
 
         bytes memory context = _userOp._createPostOpContext(_userOpHash, cfg, _requiredPreFund);
 

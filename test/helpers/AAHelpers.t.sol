@@ -119,12 +119,23 @@ contract AAHelpers is SignerHelpers {
                 IPaymaster(address(paymaster)).getHash(1, u[0], _signerType)
             );
 
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(__PAYMASTER_SIGNER_EOA, hash);
-
-            u[0].paymasterAndData = abi.encodePacked(u[0].paymasterAndData, abi.encodePacked(_signerType, r, s, v));
+            if (_signerType == SignerType.P256) {
+                (bytes memory signature, P256PubKey memory pK) = _signHashWithP256(hash, prehash);
+                _authorizeSigner(pK, _signerType);
+                u[0].paymasterAndData =
+                    abi.encodePacked(u[0].paymasterAndData, abi.encodePacked(_signerType, signature));
+            } else if (_signerType == SignerType.WebAuthnP256) {
+                (bytes memory signature, P256PubKey memory pK) = _signHashWithWebAuthn(hash);
+                _authorizeSigner(pK, _signerType);
+                u[0].paymasterAndData =
+                    abi.encodePacked(u[0].paymasterAndData, abi.encodePacked(_signerType, signature));
+            } else if (_signerType == SignerType.Secp256k1) {
+                (uint8 v, bytes32 r, bytes32 s) = vm.sign(__PAYMASTER_SIGNER_EOA, hash);
+                u[0].paymasterAndData = abi.encodePacked(u[0].paymasterAndData, abi.encodePacked(_signerType, r, s, v));
+            }
 
             userOpHash = IEntryPoint(Constants.EP_V9_ADDRESS).getUserOpHash(u[0]);
-            (v, r, s) = vm.sign(_pk, userOpHash);
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(_pk, userOpHash);
             u[0].signature = abi.encodePacked(r, s, v);
         }
 
