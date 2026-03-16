@@ -85,8 +85,8 @@ contract TestPaymasterMode00 is Helpers {
         (PackedUserOperation[] memory u,) =
             _getUserOp(__7702_ADDRESS_EOA, __7702_EOA, data, Sponsor_Type.ETH, Allow_Bundlers.ALL, SignerType.Secp256k1);
 
-        vm.prank(bundlers[0], bundlers[0]);
-        entryPoint.handleOps(u, payable(bundlers[0]));
+        vm.prank(address(0xcafe), address(0xcafe));
+        entryPoint.handleOps(u, payable(address(0xcafe)));
         _assert(false, 0.1 ether);
     }
 
@@ -174,8 +174,8 @@ contract TestPaymasterMode00 is Helpers {
         (PackedUserOperation[] memory u,) =
             _getUserOp(__7702_ADDRESS_EOA, __7702_EOA, data, Sponsor_Type.ETH, Allow_Bundlers.ALL, SignerType.P256);
 
-        vm.prank(bundlers[0], bundlers[0]);
-        entryPoint.handleOps(u, payable(bundlers[0]));
+        vm.prank(address(0xcafe), address(0xcafe));
+        entryPoint.handleOps(u, payable(address(0xcafe)));
         _assert(false, 0.1 ether);
     }
 
@@ -188,8 +188,8 @@ contract TestPaymasterMode00 is Helpers {
         (PackedUserOperation[] memory u,) =
             _getUserOp(__7702_ADDRESS_EOA, __7702_EOA, data, Sponsor_Type.ETH, Allow_Bundlers.ALL, SignerType.P256);
 
-        vm.prank(bundlers[0], bundlers[0]);
-        entryPoint.handleOps(u, payable(bundlers[0]));
+        vm.prank(address(0xcafe), address(0xcafe));
+        entryPoint.handleOps(u, payable(address(0xcafe)));
         _assert(false, 0.1 ether);
     }
 
@@ -263,8 +263,8 @@ contract TestPaymasterMode00 is Helpers {
             __7702_ADDRESS_EOA, __7702_EOA, data, Sponsor_Type.ETH, Allow_Bundlers.ALL, SignerType.WebAuthnP256
         );
 
-        vm.prank(bundlers[0], bundlers[0]);
-        entryPoint.handleOps(u, payable(bundlers[0]));
+        vm.prank(address(0xcafe), address(0xcafe));
+        entryPoint.handleOps(u, payable(address(0xcafe)));
         _assert(false, 0.1 ether);
     }
 
