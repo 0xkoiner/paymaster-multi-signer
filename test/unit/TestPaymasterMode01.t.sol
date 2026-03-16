@@ -288,6 +288,82 @@ contract TestPaymasterMode01 is Helpers {
 
     // ------------------------------------------------------------------------------------
     //
+    //                                         WebAuthn
+    //
+    // ------------------------------------------------------------------------------------
+
+    // Test ERC20_MODE with any bundler
+    function test_paymaster_entry_point_mode_1_all_bundlers_webauthn_signer() external {
+        (PackedUserOperation[] memory u, bytes32 userOpHash) = _getUserOp(
+            __7702_ADDRESS_EOA, __7702_EOA, hex"", Sponsor_Type.ERC20, Allow_Bundlers.ALL, SignerType.WebAuthnP256
+        );
+
+        vm.prank(Constants.EP_V9_ADDRESS);
+        (bytes memory context, uint256 validationData) = paymaster.validatePaymasterUserOp(u[0], userOpHash, 0);
+        (ValidationData memory data) = _parseValidationData(validationData);
+
+        _assert(data, context, userOpHash);
+    }
+
+    // Test ERC20_MODE with specific bundler
+    function test_paymaster_entry_point_mode_1_check_bundler_webauthn_signer() external {
+        (PackedUserOperation[] memory u, bytes32 userOpHash) = _getUserOp(
+            __7702_ADDRESS_EOA, __7702_EOA, hex"", Sponsor_Type.ERC20, Allow_Bundlers.SPECIFIC, SignerType.WebAuthnP256
+        );
+
+        vm.prank(Constants.EP_V9_ADDRESS, bundlers[0]);
+        (bytes memory context, uint256 validationData) = paymaster.validatePaymasterUserOp(u[0], userOpHash, 0);
+        (ValidationData memory data) = _parseValidationData(validationData);
+
+        _assert(data, context, userOpHash);
+    }
+
+    // Test ERC20_MODE with any bundler full cycle
+    function test_paymaster_7702_account_mode_1_all_bundlers_webauthn_signer() external {
+        _assert(true, 0);
+        _assertErc20(true, address(sponsorERC20), __PAYMASTER_SUPER_ADMIN_ADDRESS_EOA);
+
+        bytes memory dataApprove =
+            abi.encodeWithSelector(IERC20.approve.selector, address(paymaster), type(uint256).max);
+        calls.push(_encodeCall(random, 0.1 ether, hex""));
+        calls.push(_encodeCall(address(sponsorERC20), 0, dataApprove));
+
+        bytes memory data = abi.encodeWithSelector(BaseAccount.executeBatch.selector, calls);
+
+        (PackedUserOperation[] memory u,) = _getUserOp(
+            __7702_ADDRESS_EOA, __7702_EOA, data, Sponsor_Type.ERC20, Allow_Bundlers.ALL, SignerType.WebAuthnP256
+        );
+
+        vm.prank(address(0xcafe), address(0xcafe));
+        entryPoint.handleOps(u, payable(address(0xcafe)));
+        _assert(false, 0.1 ether);
+        _assertErc20(false, address(sponsorERC20), __PAYMASTER_SUPER_ADMIN_ADDRESS_EOA);
+    }
+
+    // Test ERC20_MODE with specific bundler full cycle
+    function test_paymaster_7702_account_mode_1_check_bundler_webauthn_signer() external {
+        _assert(true, 0);
+        _assertErc20(true, address(sponsorERC20), __PAYMASTER_SUPER_ADMIN_ADDRESS_EOA);
+
+        bytes memory dataApprove =
+            abi.encodeWithSelector(IERC20.approve.selector, address(paymaster), type(uint256).max);
+        calls.push(_encodeCall(random, 0.1 ether, hex""));
+        calls.push(_encodeCall(address(sponsorERC20), 0, dataApprove));
+
+        bytes memory data = abi.encodeWithSelector(BaseAccount.executeBatch.selector, calls);
+
+        (PackedUserOperation[] memory u,) = _getUserOp(
+            __7702_ADDRESS_EOA, __7702_EOA, data, Sponsor_Type.ERC20, Allow_Bundlers.SPECIFIC, SignerType.WebAuthnP256
+        );
+
+        vm.prank(bundlers[0], bundlers[0]);
+        entryPoint.handleOps(u, payable(bundlers[0]));
+        _assert(false, 0.1 ether);
+        _assertErc20(false, address(sponsorERC20), __PAYMASTER_SUPER_ADMIN_ADDRESS_EOA);
+    }
+
+    // ------------------------------------------------------------------------------------
+    //
     //                                        Helpers
     //
     // ------------------------------------------------------------------------------------
