@@ -18,6 +18,8 @@ import { PostOpMode, Types, ERC20PaymasterData, ERC20PostOpContext } from "../ty
 import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import { PackedUserOperation } from "@account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 
+import { console2 as console } from "../../lib/forge-std/src/console2.sol";
+
 using UserOperationLib for PackedUserOperation;
 
 abstract contract Validations is BasePaymaster {
@@ -321,5 +323,54 @@ abstract contract Validations is BasePaymaster {
         );
 
         return keccak256(abi.encode(userOpHash, block.chainid));
+    }
+
+    function _validateSignature(
+        PackedUserOperation calldata _userOp,
+        bytes32 _userOpHash
+    )
+        internal
+        override
+        returns (uint256 validationData)
+    {
+        uint8 signerType = uint8(_userOp.signature[0]);
+        console.log("signerType", signerType);
+
+        _userOp.signature[1:]._validateSignatureLength(signerType);
+
+        if (signerType == uint8(SignerType.P256)) {
+            // P256 validation
+            _validateP256Signer(_userOp, _userOpHash);
+        } else if (signerType == uint8(SignerType.WebAuthnP256)) {
+            // WebAuthn validation
+        } else if (signerType == uint8(SignerType.Secp256k1)) {
+            // Secp256k1 validation
+        } else {
+            revert Errors.IncorrectSignerType();
+        }
+    }
+
+    function _validateP256Signer(
+        PackedUserOperation calldata _userOp,
+        bytes32 _userOpHash
+    ) internal returns (uint256 validationData) 
+    {
+        // validation
+    }
+
+    function _validateWebAuthnSigner(
+        PackedUserOperation calldata _userOp,
+        bytes32 _userOpHash
+    ) internal returns (uint256 validationData) 
+    {
+        // validation
+    }
+
+    function _validateSecp256k1Signer(
+        PackedUserOperation calldata _userOp,
+        bytes32 _userOpHash
+    ) internal returns (uint256 validationData) 
+    {
+        // validation
     }
 }
