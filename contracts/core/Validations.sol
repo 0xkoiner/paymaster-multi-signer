@@ -17,6 +17,7 @@ import { UserOperationLib } from "@account-abstraction/contracts/core/UserOperat
 import { PostOpMode, Types, ERC20PaymasterData, ERC20PostOpContext } from "../type/Types.sol";
 import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import { PackedUserOperation } from "@account-abstraction/contracts/interfaces/PackedUserOperation.sol";
+import { SIG_VALIDATION_FAILED, SIG_VALIDATION_SUCCESS } from "@account-abstraction/contracts/core/Helpers.sol";
 
 import { console2 as console } from "../../lib/forge-std/src/console2.sol";
 
@@ -107,20 +108,20 @@ abstract contract Validations is BasePaymaster {
             if (signerType == uint8(SignerType.P256)) {
                 (bytes32 r, bytes32 s, bytes32 qx, bytes32 qy, bool prehash) = signature._unpackP256Signature();
                 Key memory key = getKey(qx.hash(qy, SignerType.P256));
-                if (key._keyValidation()) {
+                if (key._keyValidation() || key._isSigner()) {
                     bytes32 digest = prehash ? EfficientHashLib.sha2(hash) : hash;
                     isSignatureValid = webAuthnVerifier.verifyP256Signature(digest, r, s, qx, qy);
                 }
             } else if (signerType == uint8(SignerType.WebAuthnP256)) {
                 (bytes32 qx, bytes32 qy) = signature._unpackWebAuthnCoordinats();
                 Key memory key = getKey(qx.hash(qy, SignerType.WebAuthnP256));
-                if (key._keyValidation()) {
+                if (key._keyValidation() || key._isSigner()) {
                     isSignatureValid = webAuthnVerifier.verifyEncodedSignature(hash, true, signature, qx, qy);
                 }
             } else if (signerType == uint8(SignerType.Secp256k1)) {
                 address recoveredSigner = ECDSA.recover(hash, signature);
                 Key memory key = getKey(recoveredSigner.hash());
-                isSignatureValid = key._keyValidation();
+                isSignatureValid = (key._keyValidation() || key._isSigner());
             }
         }
 
@@ -331,6 +332,7 @@ abstract contract Validations is BasePaymaster {
     )
         internal
         override
+        view
         returns (uint256 validationData)
     {
         uint8 signerType = uint8(_userOp.signature[0]);
@@ -340,37 +342,69 @@ abstract contract Validations is BasePaymaster {
 
         if (signerType == uint8(SignerType.P256)) {
             // P256 validation
-            _validateP256Signer(_userOp, _userOpHash);
+            validationData = SIG_VALIDATION_FAILED;
         } else if (signerType == uint8(SignerType.WebAuthnP256)) {
             // WebAuthn validation
+            validationData = _validateWebAuthnSigner(_userOp, _userOpHash);
         } else if (signerType == uint8(SignerType.Secp256k1)) {
             // Secp256k1 validation
+            validationData = _validateSecp256k1Signer(_userOp, _userOpHash);
         } else {
             revert Errors.IncorrectSignerType();
         }
     }
 
-    function _validateP256Signer(
-        PackedUserOperation calldata _userOp,
-        bytes32 _userOpHash
-    ) internal returns (uint256 validationData) 
-    {
-        // validation
-    }
-
     function _validateWebAuthnSigner(
         PackedUserOperation calldata _userOp,
         bytes32 _userOpHash
-    ) internal returns (uint256 validationData) 
+    )
+        internal
+        view
+        returns (uint256 validationData)
     {
-        // validation
+        (bytes32 qx, bytes32 qy) = _userOp.signature[1:]._unpackWebAuthnCoordinats();
+        Key memory key = getKey(qx.hash(qy, SignerType.WebAuthnP256));
+
+        if (key._isSigner()) return SIG_VALIDATION_FAILED;
+        
+        if (key._keyValidation()) {
+            bool isSignatureValid = webAuthnVerifier.verifyEncodedSignature(_userOpHash, true, _userOp.signature[1:], qx, qy);
+
+            if (key._isSuperAdmin() && isSignatureValid) return SIG_VALIDATION_SUCCESS;
+
+            bool isValidCallData = _validateCallData(_userOp.callData);
+
+            if (key._isAdmin() && isSignatureValid && isValidCallData) return SIG_VALIDATION_SUCCESS;
+        }
+
+        return SIG_VALIDATION_FAILED;
     }
 
     function _validateSecp256k1Signer(
         PackedUserOperation calldata _userOp,
         bytes32 _userOpHash
-    ) internal returns (uint256 validationData) 
+    )
+        internal
+        view
+        returns (uint256 validationData)
     {
-        // validation
+        address recoveredSigner = ECDSA.recover(_userOpHash, _userOp.signature[1:]);
+        Key memory key = getKey(recoveredSigner.hash());
+
+        if (key._isSigner()) return SIG_VALIDATION_FAILED;
+
+        if (key._keyValidation()) {
+            if (key._isSuperAdmin()) return SIG_VALIDATION_SUCCESS;
+
+            bool isValidCallData = _validateCallData(_userOp.callData);
+
+            if (key._isAdmin() && isValidCallData) return SIG_VALIDATION_SUCCESS;
+        }
+
+        return SIG_VALIDATION_FAILED;
+    }
+
+    function _validateCallData(bytes calldata _callData) internal pure returns (bool) {
+        return bytes4(_callData[:4])._isAllowedSelector();
     }
 }

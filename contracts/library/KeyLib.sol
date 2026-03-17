@@ -63,7 +63,7 @@ library KeyLib {
     }
 
     function _keyValidation(Key memory _k) internal view returns (bool) {
-        if (_k.expiry < uint40(block.timestamp) || (_k.isSuperAdmin || _k.isAdmin) || _k.publicKey.length == 0) {
+        if (_k.expiry < uint40(block.timestamp)) {
             return false;
         }
 
@@ -77,7 +77,7 @@ library KeyLib {
             switch _signerType
             case 0x00 {
                 // P256: length must be 128 (extractable) or 129 (non-extractable flag)
-                if gt(mload(_signature), 129) {
+                if iszero(or(eq(len, 128), eq(len, 129))) {
                     mstore(0x00, 0xf95eeeac)
                     revert(0x1c, 0x04)
                 }
@@ -147,6 +147,14 @@ library KeyLib {
         assembly {
             qx := mload(add(_signature, sub(len, 0x20)))
             qy := mload(add(_signature, len))
+        }
+    }
+
+    function _isAllowedSelector(bytes4 _sel) internal pure returns (bool isValid) {
+        assembly {
+            isValid := iszero(
+                or(or(eq(_sel, 0xd0e30db0), eq(_sel, 0x0396cb60)), or(eq(_sel, 0xbb9fe6bf), eq(_sel, 0x56864ab1)))
+            )
         }
     }
 }

@@ -17,6 +17,7 @@ contract TestUnpackSignerType is Helpers {
     Key internal superAdmin;
     Key internal admin;
     Key internal signer;
+    P256PubKey internal pK;
 
     function setUp() public override {
         super.setUp();
@@ -40,7 +41,7 @@ contract TestUnpackSignerType is Helpers {
         u[0].signature = _packP256Signer();
 
         vm.prank(Constants.EP_V9_ADDRESS);
-        uint256 validationData = paymaster.validateUserOp(u[0], hash, 0);
+        paymaster.validateUserOp(u[0], hash, 0);
     }
 
     // Test SignerType(uint8(userOp.signature[0])) WebAuthn
@@ -52,7 +53,7 @@ contract TestUnpackSignerType is Helpers {
         u[0].signature = _packWebAuthnSigner(hash);
 
         vm.prank(Constants.EP_V9_ADDRESS);
-        uint256 validationData = paymaster.validateUserOp(u[0], hash, 0);
+        paymaster.validateUserOp(u[0], hash, 0);
     }
 
     // Test SignerType(uint8(userOp.signature[0])) Eoa
@@ -61,10 +62,10 @@ contract TestUnpackSignerType is Helpers {
             __7702_ADDRESS_EOA, __7702_EOA, hex"", Sponsor_Type.ETH, Allow_Bundlers.ALL, SignerType.Secp256k1
         );
 
-        u[0].signature = _packEoaSigner();
+        u[0].signature = _packEoaSigner(hash);
 
         vm.prank(Constants.EP_V9_ADDRESS);
-        uint256 validationData = paymaster.validateUserOp(u[0], hash, 0);
+        paymaster.validateUserOp(u[0], hash, 0);
     }
 
     // ------------------------------------------------------------------------------------
@@ -82,18 +83,22 @@ contract TestUnpackSignerType is Helpers {
     }
 
     // Pack P256 Signature
-    function _packP256Signer() internal pure returns (bytes memory signature) {
+    function _packP256Signer() internal returns (bytes memory signature) {
+        pK = P256PubKey(keccak256("x"), keccak256("y"));
+        _authorizeSigner(pK, SignerType.P256);
         signature = abi.encodePacked(SignerType.P256, keccak256("r"), keccak256("s"), keccak256("x"), keccak256("y"));
     }
 
     // Pack WebAuthn Signature
     function _packWebAuthnSigner(bytes32 _hash) internal returns (bytes memory signature) {
-        (signature,) = _signHashWithWebAuthn(_hash);
+        (signature, pK) = _signHashWithWebAuthn(_hash);
+        _authorizeSigner(pK, SignerType.WebAuthnP256);
         signature = abi.encodePacked(SignerType.WebAuthnP256, signature);
     }
 
     // Pack Eoa Signature
-    function _packEoaSigner() internal pure returns (bytes memory signature) {
-        signature = abi.encodePacked(SignerType.Secp256k1, keccak256("r"), keccak256("s"), uint8(0));
+    function _packEoaSigner(bytes32 _hash) internal view returns (bytes memory signature) {
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(__PAYMASTER_SIGNER_EOA, _hash);
+        signature = abi.encodePacked(abi.encodePacked(SignerType.Secp256k1, r, s, v));
     }
 }
