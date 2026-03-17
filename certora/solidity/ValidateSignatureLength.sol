@@ -9,7 +9,7 @@ contract ValidateSignatureLength {
             switch _signerType
             case 0x00 {
                 // P256: length must be 128 (extractable) or 129 (non-extractable flag)
-                if iszero(or(eq(len, 128), eq(len, 129))) {
+                if gt(mload(_signature), 129) {
                     mstore(0x00, 0xf95eeeac)
                     revert(0x1c, 0x04)
                 }

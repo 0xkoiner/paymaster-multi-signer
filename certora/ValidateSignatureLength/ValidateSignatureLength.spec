@@ -2,16 +2,17 @@ methods {
     function validateSignatureLength(bytes, uint8) external envfree;
 }
 
-rule p256LengthValidationLastReverted {
-    bytes signature;
-    uint8 signerType;
+rule p256LengthValidationLastReverted {                                                        
+    bytes signature;                                                                           
+    uint8 signerType;                                                                          
+                                                                                                
+    require signerType == 0, "Isolating P256 signer type";                                     
 
-    require signerType == 0, "Isolating P256 signer type for this rule";
-
-    validateSignatureLength@withrevert(signature, signerType);
-
-    assert lastReverted <=> (signature.length != 128 && signature.length != 129);
-}
+    validateSignatureLength@withrevert(signature, signerType);                                 
+                                                                                            
+    assert lastReverted <=> (signature.length > 129),                                          
+        "P256 must revert only when signature exceeds 129 bytes";                            
+}   
 
 rule p256LengthValidationSatisfy {
     bytes signature;

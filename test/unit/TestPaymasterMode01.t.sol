@@ -410,7 +410,7 @@ contract TestPaymasterMode01 is Helpers {
         }
     }
 
-    function _assertErc20(bool _isBefore, address _erc20, address _reciever) internal {
+    function _assertErc20(bool _isBefore, address _erc20, address /*_reciever*/) internal {
         if (_isBefore) {
             balanceBeforeErc20 = IERC20(_erc20).balanceOf(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA);
             assertEq(balanceBeforeErc20, 0, "Not same balance");
