@@ -152,8 +152,10 @@ library KeyLib {
 
     function _isAllowedSelector(bytes4 _sel) internal pure returns (bool isValid) {
         assembly {
-            isValid := iszero(
-                or(or(eq(_sel, 0xd0e30db0), eq(_sel, 0x0396cb60)), or(eq(_sel, 0xbb9fe6bf), eq(_sel, 0x56864ab1)))
+            /// @dev:          deposit()         addStake(uint32)            unlockStake()        addSigner(Key)
+            isValid := or(
+                or(eq(_sel, 0xd0e30db0), eq(_sel, 0x0396cb60)),
+                or(eq(_sel, 0xbb9fe6bf), eq(_sel, 0x56864ab1))
             )
         }
     }

@@ -52,8 +52,14 @@ contract TestSuperAdminEoa is Helpers {
         _deal(__7702_ADDRESS_EOA, Constants.ETH_1);
         _depositPaymaster();
 
-        _mint(__7702_ADDRESS_EOA, Constants.ERC20_MINT_VAL_100_18, true);
+        _mint(address(paymaster), Constants.ERC20_MINT_VAL_100_18, true);
     }
+
+    // ------------------------------------------------------------------------------------
+    //
+    //                       function authorizeAdmin(Key memory _key)
+    //
+    // ------------------------------------------------------------------------------------
 
     function test_super_admin_eoa_authorize_admin_direct() external {
         random = _createKeySecp256k1(TypeOfKey.ADMIN, randomEoa);
@@ -81,9 +87,53 @@ contract TestSuperAdminEoa is Helpers {
         _assert(expected);
     }
 
-    function test_super_admin_eoa_authorize_admin_aa_mode_00() external { }
+    function test_super_admin_eoa_authorize_admin_aa_mode_00() external {
+        random = _createKeySecp256k1(TypeOfKey.ADMIN, randomEoa);
+        expected.push(random);
 
-    function test_super_admin_eoa_authorize_admin_aa_mode_01() external { }
+        bytes memory data = abi.encodeWithSelector(paymaster.authorizeAdmin.selector, random);
+        (PackedUserOperation[] memory u, bytes32 hash) = _getUserOp(
+            address(paymaster),
+            __PAYMASTER_SUPER_ADMIN_EOA,
+            data,
+            Sponsor_Type.ETH,
+            Allow_Bundlers.ALL,
+            SignerType.Secp256k1
+        );
+
+        u[0].signature = _packEoaSigner(__PAYMASTER_SUPER_ADMIN_EOA, hash);
+
+        _relayUserOp(u);
+        _assert(expected);
+    }
+
+    function test_super_admin_eoa_authorize_admin_aa_mode_01() external {
+        random = _createKeySecp256k1(TypeOfKey.ADMIN, randomEoa);
+        expected.push(random);
+
+        bytes memory dataApprove =
+            abi.encodeWithSelector(IERC20.approve.selector, address(paymaster), type(uint256).max);
+        bytes memory dataAuthorizeAdmin = abi.encodeWithSelector(paymaster.authorizeAdmin.selector, random);
+
+        calls.push(_encodeCall(address(sponsorERC20), 0, dataApprove));
+        calls.push(_encodeCall(address(paymaster), 0, dataAuthorizeAdmin));
+
+        bytes memory data = abi.encodeWithSelector(paymaster.executeBatch.selector, calls);
+
+        (PackedUserOperation[] memory u, bytes32 hash) = _getUserOp(
+            address(paymaster),
+            __PAYMASTER_SUPER_ADMIN_EOA,
+            data,
+            Sponsor_Type.ERC20,
+            Allow_Bundlers.ALL,
+            SignerType.Secp256k1
+        );
+
+        u[0].signature = _packEoaSigner(__PAYMASTER_SUPER_ADMIN_EOA, hash);
+
+        _relayUserOp(u);
+        _assert(expected);
+    }
 
     // ------------------------------------------------------------------------------------
     //

@@ -68,6 +68,12 @@ contract SignerHelpers is Etch {
         k.publicKey = _encodeKey(_eoa);
     }
 
+    // Pack Eoa Signature
+    function _packEoaSigner(uint256 _pK, bytes32 _hash) internal pure returns (bytes memory signature) {
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(_pK, _hash);
+        signature = abi.encodePacked(abi.encodePacked(SignerType.Secp256k1, r, s, v));
+    }
+
     function _encodeKey(address _eoa) internal pure returns (bytes memory) {
         return abi.encode(_eoa);
     }

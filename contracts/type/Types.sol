@@ -23,6 +23,12 @@ struct Key {
     bytes publicKey;
 }
 
+struct Call {
+    address target;
+    uint256 value;
+    bytes data;
+}
+
 /// @notice Hold all configs needed in ERC-20 mode.
 struct ERC20PaymasterData {
     /// @dev The treasury address where the tokens will be sent to.

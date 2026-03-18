@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.34;
 
+import { Call } from "../type/Types.sol";
 import { Errors } from "../type/Errors.sol";
 import { MultiSigner } from "./MultiSigner.sol";
+import { Exec } from "@account-abstraction/contracts/utils/Exec.sol";
 import { PackedUserOperation } from "@account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 
 abstract contract BasePaymaster is MultiSigner {
@@ -80,6 +82,29 @@ abstract contract BasePaymaster is MultiSigner {
 
     function withdrawStake(address payable _withdrawAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
         entryPoint.withdrawStake(_withdrawAddress);
+    }
+
+    /**
+     * execute a batch of calls.
+     * revert on the first call that fails.
+     * If the batch reverts, and it contains more than a single call, then wrap the revert with ExecuteError,
+     *  to mark the failing call index.
+     */
+    function executeBatch(Call[] calldata calls) external virtual {
+        _requireFromEntryPoint();
+
+        uint256 callsLength = calls.length;
+        for (uint256 i = 0; i < callsLength; i++) {
+            Call calldata call = calls[i];
+            bool ok = Exec.call(call.target, call.value, call.data, gasleft());
+            if (!ok) {
+                if (callsLength == 1) {
+                    Exec.revertWithReturnData();
+                } else {
+                    revert Errors.ExecuteError(i, Exec.getReturnData(0));
+                }
+            }
+        }
     }
 
     function _requireFromEntryPoint() internal view virtual {

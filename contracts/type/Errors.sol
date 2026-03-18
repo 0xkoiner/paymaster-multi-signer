@@ -20,5 +20,6 @@ library Errors {
     error PaymasterAndDataLengthInvalid();
     error PaymasterSignatureLengthInvalid();
     error BundlerNotAllowed(address bundler);
+    error ExecuteError(uint256 index, bytes error);
     error AccessControlUnauthorizedAccount(address account);
 }
