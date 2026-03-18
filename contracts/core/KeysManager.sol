@@ -18,7 +18,7 @@ contract KeysManager is ManagerAccessControl {
 
     function authorizeAdmin(Key memory _key) public onlySuperAdminKeyOrEp returns (bytes32 keyHash) {
         if (keyHashes.contains(_key.hash())) revert Errors.KeyAuthorized();
-        if (!_key.isAdmin || _key.isSuperAdmin) revert Errors.IncorrectSignerRole(); 
+        if (!_key.isAdmin || _key.isSuperAdmin) revert Errors.IncorrectSignerRole();
 
         keyHash = _addKey(_key);
     }
