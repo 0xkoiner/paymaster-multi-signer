@@ -44,6 +44,22 @@ contract SignerHelpers is Etch {
     //
     // ------------------------------------------------------------------------------------
 
+    function _createKeyP256(TypeOfKey _typeOfKey) internal pure returns (Key memory k) {
+        k.expiry = _typeOfKey == TypeOfKey.SUPER_ADMIN ? type(uint40).max : Constants.EXPIRY;
+        k.keyType = SignerType.P256;
+        k.isSuperAdmin = _typeOfKey == TypeOfKey.SUPER_ADMIN ? true : false;
+        k.isAdmin = _typeOfKey == TypeOfKey.ADMIN ? true : false;
+        k.publicKey = _encodeKey(keccak256("x-p256"), keccak256("y-p256"));
+    }
+
+    function _createKeyWebAuthn(TypeOfKey _typeOfKey) internal pure returns (Key memory k) {
+        k.expiry = _typeOfKey == TypeOfKey.SUPER_ADMIN ? type(uint40).max : Constants.EXPIRY;
+        k.keyType = SignerType.WebAuthnP256;
+        k.isSuperAdmin = _typeOfKey == TypeOfKey.SUPER_ADMIN ? true : false;
+        k.isAdmin = _typeOfKey == TypeOfKey.ADMIN ? true : false;
+        k.publicKey = _encodeKey(keccak256("x-webAuthn"), keccak256("y-webAuthn"));
+    }
+
     function _createKeySecp256k1(TypeOfKey _typeOfKey, address _eoa) internal pure returns (Key memory k) {
         k.expiry = _typeOfKey == TypeOfKey.SUPER_ADMIN ? type(uint40).max : Constants.EXPIRY;
         k.keyType = SignerType.Secp256k1;
@@ -106,7 +122,7 @@ contract SignerHelpers is Etch {
         k.isAdmin = false;
         k.publicKey = _encodeKey(_pK.qx, _pK.qy);
 
-        vm.prank(address(0xbabe));
-        paymaster.authorize(k);
+        vm.prank(__PAYMASTER__ADMIN_ADDRESS_EOA);
+        paymaster.addSigner(k);
     }
 }

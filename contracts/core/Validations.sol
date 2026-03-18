@@ -331,8 +331,8 @@ abstract contract Validations is BasePaymaster {
         bytes32 _userOpHash
     )
         internal
-        override
         view
+        override
         returns (uint256 validationData)
     {
         uint8 signerType = uint8(_userOp.signature[0]);
@@ -366,9 +366,10 @@ abstract contract Validations is BasePaymaster {
         Key memory key = getKey(qx.hash(qy, SignerType.WebAuthnP256));
 
         if (key._isSigner()) return SIG_VALIDATION_FAILED;
-        
+
         if (key._keyValidation()) {
-            bool isSignatureValid = webAuthnVerifier.verifyEncodedSignature(_userOpHash, true, _userOp.signature[1:], qx, qy);
+            bool isSignatureValid =
+                webAuthnVerifier.verifyEncodedSignature(_userOpHash, true, _userOp.signature[1:], qx, qy);
 
             if (key._isSuperAdmin() && isSignatureValid) return SIG_VALIDATION_SUCCESS;
 

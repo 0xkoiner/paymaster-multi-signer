@@ -5,10 +5,12 @@ import { Storage } from "./Storage.sol";
 import { Errors } from "../type/Errors.sol";
 import { KeyLib } from "../library/KeyLib.sol";
 import { KeysManager } from "./KeysManager.sol";
+import { LibBytes } from "@solady/src/utils/LibBytes.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 
 abstract contract ManagerAccessControl is AccessControl, Storage {
     using KeyLib for *;
+    using LibBytes for LibBytes.BytesStorage;
 
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
 
@@ -19,14 +21,20 @@ abstract contract ManagerAccessControl is AccessControl, Storage {
         _;
     }
 
-    modifier onlySuperAdminOrAdminKey() {
-        if (!keyStorage[msg.sender.hash()]._isSuperAdmin() && !keyStorage[msg.sender.hash()]._isAdmin()) {
+    modifier onlySuperAdminOrAdminKeyOrEp() {
+        bytes32 hash = msg.sender.hash();
+        bool hasKey = keyStorage[hash].length() != 0;
+
+        if (
+            !(hasKey && keyStorage[hash]._isSuperAdmin()) && !(hasKey && keyStorage[hash]._isAdmin())
+                && msg.sender != address(entryPoint)
+        ) {
             revert Errors.AccessControlUnauthorizedAccount(msg.sender);
         }
         _;
     }
-    modifier onlySuperAdminKey() {
-        if (!keyStorage[msg.sender.hash()]._isSuperAdmin()) {
+    modifier onlySuperAdminKeyOrEp() {
+        if (!keyStorage[msg.sender.hash()]._isSuperAdmin() && msg.sender == address(entryPoint)) {
             revert Errors.AccessControlUnauthorizedAccount(msg.sender);
         }
         _;

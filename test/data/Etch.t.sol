@@ -8,9 +8,10 @@ contract Etch is Data {
     // Etch Deployed Bytecode
     function _ethc() internal {
         vm.etch(Constants.P256_ADDRESS, Constants.P256_DEPLOYED_BYTE_CODE);
+        _label();
     }
 
-    // Label ERC5564 and ERC6538 canonical addresses
+    // Label canonical addresses
     function _label() internal {
         vm.label(Constants.P256_ADDRESS, "P256-Verifier");
     }

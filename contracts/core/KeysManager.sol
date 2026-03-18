@@ -16,10 +16,11 @@ contract KeysManager is ManagerAccessControl {
     using EnumerableSetLib for *;
     using LibBytes for LibBytes.BytesStorage;
 
-    function authorize(Key memory _key) public returns (bytes32 keyHash) {
-        // Check the executor if the superAdmin
+    function authorizeAdmin(Key memory _key) public onlySuperAdminKeyOrEp returns (bytes32 keyHash) {
+        if (keyHashes.contains(_key.hash())) revert Errors.KeyAuthorized();
+        if (!_key.isAdmin || _key.isSuperAdmin) revert Errors.IncorrectSignerRole(); 
+
         keyHash = _addKey(_key);
-        emit Events.Authorized(keyHash, _key);
     }
 
     function revoke(bytes32 _keyHash) public {
@@ -34,6 +35,8 @@ contract KeysManager is ManagerAccessControl {
             abi.encodePacked(_key.publicKey, _key.expiry, _key.keyType, _key.isSuperAdmin, _key.isAdmin)
         );
         keyHashes.add(keyHash);
+
+        emit Events.Authorized(keyHash, _key);
     }
 
     function _removeKey(bytes32 _keyHash) internal virtual {

@@ -22,14 +22,14 @@ abstract contract MultiSigner is KeysManager {
         emit Events.SignerRemoved(_signer);
     }
 
-    function addSigner(Key calldata _signer) public onlySuperAdminOrAdminKey {
+    function addSigner(Key calldata _signer) public onlySuperAdminOrAdminKeyOrEp {
         if (keyHashes.contains(_signer.hash())) revert Errors.KeyAuthorized();
         if (_signer.isSuperAdmin || _signer.isAdmin) revert Errors.IncorrectSignerRole();
 
-        authorize(_signer);
+        _addKey(_signer);
     }
 
-    function removeSigner(bytes32 _signer) public onlySuperAdminKey {
+    function removeSigner(bytes32 _signer) public onlySuperAdminKeyOrEp {
         if (keyStorage[_signer]._isSuperAdmin() || keyStorage[_signer]._isAdmin()) revert Errors.KillSwitch();
         revoke(_signer);
     }

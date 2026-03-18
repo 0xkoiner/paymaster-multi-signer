@@ -22,13 +22,13 @@ contract PaymasterEntry is Paymaster {
         if (!_superAdmin._isSuperAdmin()) revert();
         if (!_admin._isAdmin()) revert();
 
-        authorize(_superAdmin);
-        authorize(_admin);
+        _addKey(_superAdmin);
+        _addKey(_admin);
 
         uint256 i = 0;
         for (i; i < _signers.length;) {
             if (!_signers[i]._isSigner()) revert();
-            authorize(_signers[i]);
+            _addKey(_signers[i]);
             unchecked {
                 ++i;
             }
