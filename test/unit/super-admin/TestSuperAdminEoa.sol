@@ -3,6 +3,7 @@ pragma solidity 0.8.34;
 
 import { Constants } from "../../data/Constants.sol";
 import { Helpers } from "../../helpers/Helpers.t.sol";
+import { Errors } from "../../../contracts/type/Errors.sol";
 import { KeyLib } from "../../../contracts/library/KeyLib.sol";
 import { Key, SignerType } from "../../../contracts/type/Types.sol";
 import { ERC20PostOpContext } from "../../../contracts/type/Types.sol";
@@ -137,6 +138,108 @@ contract TestSuperAdminEoa is Helpers {
 
     // ------------------------------------------------------------------------------------
     //
+    //                            function revoke(bytes32 _keyHash)
+    //
+    // ------------------------------------------------------------------------------------
+
+    function test_super_admin_eoa_revoke_admin_direct() external {
+        random = _createKeySecp256k1(TypeOfKey.ADMIN, randomEoa);
+        expected.push(random);
+
+        vm.prank(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA);
+        paymaster.authorizeAdmin(random);
+
+        _assert(expected);
+
+        vm.prank(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA);
+        paymaster.revoke(random.hash());
+
+        _assertRevoked(random);
+    }
+
+    function test_super_admin_eoa_revoke_admin_aa_mode_00() external {
+        random = _createKeySecp256k1(TypeOfKey.ADMIN, randomEoa);
+        expected.push(random);
+
+        bytes memory data = abi.encodeWithSelector(paymaster.authorizeAdmin.selector, random);
+
+        (PackedUserOperation[] memory u, bytes32 hash) = _getUserOp(
+            address(paymaster),
+            __PAYMASTER_SUPER_ADMIN_EOA,
+            data,
+            Sponsor_Type.ETH,
+            Allow_Bundlers.ALL,
+            SignerType.Secp256k1
+        );
+
+        u[0].signature = _packEoaSigner(__PAYMASTER_SUPER_ADMIN_EOA, hash);
+
+        _relayUserOp(u);
+        _assert(expected);
+
+        data = abi.encodeWithSelector(paymaster.revoke.selector, random.hash());
+
+        (u, hash) = _getUserOp(
+            address(paymaster),
+            __PAYMASTER_SUPER_ADMIN_EOA,
+            data,
+            Sponsor_Type.ETH,
+            Allow_Bundlers.ALL,
+            SignerType.Secp256k1
+        );
+
+        u[0].signature = _packEoaSigner(__PAYMASTER_SUPER_ADMIN_EOA, hash);
+
+        _relayUserOp(u);
+
+        _assertRevoked(random);
+    }
+
+    function test_super_admin_eoa_revoke_admin_aa_mode_01() external {
+        random = _createKeySecp256k1(TypeOfKey.ADMIN, randomEoa);
+        expected.push(random);
+
+        bytes memory dataApprove =
+            abi.encodeWithSelector(IERC20.approve.selector, address(paymaster), type(uint256).max);
+        bytes memory dataAuthorizeAdmin = abi.encodeWithSelector(paymaster.authorizeAdmin.selector, random);
+
+        calls.push(_encodeCall(address(sponsorERC20), 0, dataApprove));
+        calls.push(_encodeCall(address(paymaster), 0, dataAuthorizeAdmin));
+
+        bytes memory data = abi.encodeWithSelector(paymaster.executeBatch.selector, calls);
+
+        (PackedUserOperation[] memory u, bytes32 hash) = _getUserOp(
+            address(paymaster),
+            __PAYMASTER_SUPER_ADMIN_EOA,
+            data,
+            Sponsor_Type.ERC20,
+            Allow_Bundlers.ALL,
+            SignerType.Secp256k1
+        );
+
+        u[0].signature = _packEoaSigner(__PAYMASTER_SUPER_ADMIN_EOA, hash);
+
+        _relayUserOp(u);
+        _assert(expected);
+
+        data = abi.encodeWithSelector(paymaster.revoke.selector, random.hash());
+
+        (u, hash) = _getUserOp(
+            address(paymaster),
+            __PAYMASTER_SUPER_ADMIN_EOA,
+            data,
+            Sponsor_Type.ERC20,
+            Allow_Bundlers.ALL,
+            SignerType.Secp256k1
+        );
+
+        u[0].signature = _packEoaSigner(__PAYMASTER_SUPER_ADMIN_EOA, hash);
+
+        _relayUserOp(u);
+    }
+
+    // ------------------------------------------------------------------------------------
+    //
     //                                        Helpers
     //
     // ------------------------------------------------------------------------------------
@@ -174,5 +277,10 @@ contract TestSuperAdminEoa is Helpers {
                 ++i;
             }
         }
+    }
+
+    function _assertRevoked(Key memory _k) internal {
+        vm.expectRevert(Errors.KeyDoesNotExist.selector);
+        paymaster.getKey(_k.hash());
     }
 }

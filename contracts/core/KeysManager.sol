@@ -23,7 +23,7 @@ contract KeysManager is ManagerAccessControl {
         keyHash = _addKey(_key);
     }
 
-    function revoke(bytes32 _keyHash) public {
+    function revoke(bytes32 _keyHash) public onlySuperAdminKeyOrEp {
         // Check the executor if the superAdmin
         _removeKey(_keyHash);
         emit Events.Revoked(_keyHash);

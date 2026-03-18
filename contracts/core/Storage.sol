@@ -16,8 +16,8 @@ contract Storage {
     mapping(address bundler => bool allowed) public isBundlerAllowed;
 
     /// @dev Set of key hashes for onchain enumeration of authorized keys.
-    EnumerableSetLib.Bytes32Set keyHashes;
+    EnumerableSetLib.Bytes32Set internal keyHashes;
 
     /// @dev Mapping of key hash to the key in encoded form.
-    mapping(bytes32 => LibBytes.BytesStorage) keyStorage;
+    mapping(bytes32 => LibBytes.BytesStorage) internal keyStorage;
 }
