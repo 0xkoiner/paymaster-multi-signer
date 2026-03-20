@@ -19,8 +19,6 @@ import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/Mes
 import { PackedUserOperation } from "@account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 import { SIG_VALIDATION_FAILED, SIG_VALIDATION_SUCCESS } from "@account-abstraction/contracts/core/Helpers.sol";
 
-import { console2 as console } from "../../lib/forge-std/src/console2.sol";
-
 using UserOperationLib for PackedUserOperation;
 
 abstract contract Validations is BasePaymaster {
@@ -336,7 +334,6 @@ abstract contract Validations is BasePaymaster {
         returns (uint256 validationData)
     {
         uint8 signerType = uint8(_userOp.signature[0]);
-        console.log("signerType", signerType);
 
         _userOp.signature[1:]._validateSignatureLength(signerType);
 
@@ -398,7 +395,7 @@ abstract contract Validations is BasePaymaster {
             if (key._isSuperAdmin()) return SIG_VALIDATION_SUCCESS;
 
             bool isValidCallData = _validateCallData(_userOp.callData);
-
+            
             if (key._isAdmin() && isValidCallData) return SIG_VALIDATION_SUCCESS;
         }
 
