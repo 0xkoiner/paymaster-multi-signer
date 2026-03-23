@@ -45,7 +45,7 @@ contract AAHelpers is SignerHelpers {
     // Deposit ETH into the Paymaster
     function _depositPaymaster() internal {
         vm.prank(address(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA));
-        IPaymaster(address(paymaster)).deposit{ value: Constants.ETH_1 }();
+        IPaymaster(address(paymaster)).deposit{ value: Constants.ETH_0_1 }();
     }
 
     // Get nonce for _sender from EntryPoint

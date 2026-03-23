@@ -60,15 +60,15 @@ abstract contract BasePaymaster is MultiSigner {
         }
     }
 
-    function deposit() public payable {
+    function deposit() public payable onlySuperAdminOrAdminKeyOrEp {
         entryPoint.depositTo{ value: msg.value }(address(this));
     }
 
-    function withdrawTo(address payable _withdrawAddress, uint256 _amount) public onlyRole(DEFAULT_ADMIN_ROLE) {
+    function withdrawTo(address payable _withdrawAddress, uint256 _amount) public onlySuperAdminKeyOrEp {
         entryPoint.withdrawTo(_withdrawAddress, _amount);
     }
 
-    function addStake(uint32 _unstakeDelaySec) external payable onlyAdminOrManager {
+    function addStake(uint32 _unstakeDelaySec) external payable onlySuperAdminOrAdminKeyOrEp {
         entryPoint.addStake{ value: msg.value }(_unstakeDelaySec);
     }
 
@@ -76,11 +76,11 @@ abstract contract BasePaymaster is MultiSigner {
         return entryPoint.balanceOf(address(this));
     }
 
-    function unlockStake() external onlyAdminOrManager {
+    function unlockStake() external onlySuperAdminOrAdminKeyOrEp {
         entryPoint.unlockStake();
     }
 
-    function withdrawStake(address payable _withdrawAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function withdrawStake(address payable _withdrawAddress) external onlySuperAdminKeyOrEp {
         entryPoint.withdrawStake(_withdrawAddress);
     }
 

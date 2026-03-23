@@ -19,6 +19,8 @@ library Constants {
 
     // ETH value to transfer
     uint256 internal constant ETH_1 = 1 ether;
+    // ETH value to deposit
+    uint256 internal constant ETH_0_1 = 0.1 ether;
 
     // ERC20 to Mint
     uint256 internal constant ERC20_MINT_VAL_100_18 = 100 ether;
