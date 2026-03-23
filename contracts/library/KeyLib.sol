@@ -11,10 +11,10 @@ import { FixedPointMathLib as Math } from "@solady/src/utils/FixedPointMathLib.s
 using LibBytes for LibBytes.BytesStorage;
 
 library KeyLib {
-    uint256 constant private __DEPOSIT_SEL = 0xd0e30db000000000000000000000000000000000000000000000000000000000;
-    uint256 constant private __ADD_STAKE_SEL = 0x0396cb6000000000000000000000000000000000000000000000000000000000;
-    uint256 constant private __UNLOCK_STAKE_SEL = 0xbb9fe6bf00000000000000000000000000000000000000000000000000000000;
-    uint256 constant private __ADD_SIGNER_SEL = 0x56864ab100000000000000000000000000000000000000000000000000000000;
+    uint256 private constant __DEPOSIT_SEL = 0xd0e30db000000000000000000000000000000000000000000000000000000000;
+    uint256 private constant __ADD_STAKE_SEL = 0x0396cb6000000000000000000000000000000000000000000000000000000000;
+    uint256 private constant __UNLOCK_STAKE_SEL = 0xbb9fe6bf00000000000000000000000000000000000000000000000000000000;
+    uint256 private constant __ADD_SIGNER_SEL = 0x56864ab100000000000000000000000000000000000000000000000000000000;
 
     function hash(Key memory _key) internal pure returns (bytes32) {
         return EfficientHashLib.hash(uint8(_key.keyType), uint256(keccak256(_key.publicKey)));
@@ -157,7 +157,8 @@ library KeyLib {
 
     function _isAllowedSelector(bytes4 _sel) internal pure returns (bool isValid) {
         assembly {
-            /// @dev:  deposit()::0xd0e30db0  addStake(uint32)::0x0396cb60  unlockStake()::0xbb9fe6bf addSigner(Key)::0x56864ab1
+            /// @dev:  deposit()::0xd0e30db0  addStake(uint32)::0x0396cb60  unlockStake()::0xbb9fe6bf
+            /// addSigner(Key)::0x56864ab1
             isValid := or(
                 or(eq(_sel, __DEPOSIT_SEL), eq(_sel, __ADD_STAKE_SEL)),
                 or(eq(_sel, __UNLOCK_STAKE_SEL), eq(_sel, __ADD_SIGNER_SEL))

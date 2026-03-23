@@ -275,7 +275,7 @@ contract TestSuperAdminEoa is Helpers {
     }
 
     function test_super_admin_eoa_add_signer_aa_mode_01() external {
-        // ADMIN cant execute executeBatch() function need to see what in this edge case to do 
+        // ADMIN cant execute executeBatch() function need to see what in this edge case to do
         random = _createKeySecp256k1(TypeOfKey.SIGNER, randomEoa);
         expected.push(random);
 
@@ -302,6 +302,69 @@ contract TestSuperAdminEoa is Helpers {
         _relayUserOp(u);
         _assert(expected);
     }
+
+    // ------------------------------------------------------------------------------------
+    //
+    //                            removeSigner(bytes32 _signer)
+    //
+    // ------------------------------------------------------------------------------------
+
+    function test_super_admin_eoa_remove_signer_direct() external {
+        _addSigner();
+        vm.prank(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA);
+        paymaster.removeSigner(random.hash());
+
+        _assertRevoked(random);
+    }
+
+    function test_super_admin_eoa_remove_signer_aa_mode_00() external {
+        _addSigner();
+
+        bytes memory data = abi.encodeWithSelector(paymaster.removeSigner.selector, random.hash());
+
+        (PackedUserOperation[] memory u, bytes32 hash) = _getUserOp(
+            address(paymaster),
+            __PAYMASTER_SUPER_ADMIN_EOA,
+            data,
+            Sponsor_Type.ETH,
+            Allow_Bundlers.ALL,
+            SignerType.Secp256k1
+        );
+
+        u[0].signature = _packEoaSigner(__PAYMASTER_SUPER_ADMIN_EOA, hash);
+
+        _relayUserOp(u);
+        _assertRevoked(random);
+    }
+
+    function test_super_admin_eoa_remove_signer_aa_mode_01() external {
+        // ADMIN cant execute executeBatch() function need to see what in this edge case to do
+        _addSigner();
+
+        bytes memory dataApprove =
+            abi.encodeWithSelector(IERC20.approve.selector, address(paymaster), type(uint256).max);
+        bytes memory dataAuthorizeAdmin = abi.encodeWithSelector(paymaster.removeSigner.selector, random.hash());
+
+        calls.push(_encodeCall(address(sponsorERC20), 0, dataApprove));
+        calls.push(_encodeCall(address(paymaster), 0, dataAuthorizeAdmin));
+
+        bytes memory data = abi.encodeWithSelector(paymaster.executeBatch.selector, calls);
+
+        (PackedUserOperation[] memory u, bytes32 hash) = _getUserOp(
+            address(paymaster),
+            __PAYMASTER_SUPER_ADMIN_EOA,
+            data,
+            Sponsor_Type.ERC20,
+            Allow_Bundlers.ALL,
+            SignerType.Secp256k1
+        );
+
+        u[0].signature = _packEoaSigner(__PAYMASTER_SUPER_ADMIN_EOA, hash);
+
+        _relayUserOp(u);
+        _assertRevoked(random);
+    }
+
     // ------------------------------------------------------------------------------------
     //
     //                                        Helpers
@@ -314,6 +377,15 @@ contract TestSuperAdminEoa is Helpers {
         kS[0] = signer;
 
         _deploy(superAdmin, admin, kS, IEntryPoint(Constants.EP_V9_ADDRESS), webAuthnVerifier, bundlers);
+    }
+
+    function _addSigner() internal {
+        random = _createKeySecp256k1(TypeOfKey.SIGNER, randomEoa);
+        expected.push(random);
+
+        vm.prank(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA);
+        paymaster.addSigner(random);
+        _assert(expected);
     }
 
     // ------------------------------------------------------------------------------------

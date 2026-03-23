@@ -395,7 +395,7 @@ abstract contract Validations is BasePaymaster {
             if (key._isSuperAdmin()) return SIG_VALIDATION_SUCCESS;
 
             bool isValidCallData = _validateCallData(_userOp.callData);
-            
+
             if (key._isAdmin() && isValidCallData) return SIG_VALIDATION_SUCCESS;
         }
 
