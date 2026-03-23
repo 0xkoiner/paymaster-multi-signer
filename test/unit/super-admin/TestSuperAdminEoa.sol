@@ -437,7 +437,7 @@ contract TestSuperAdminEoa is Helpers {
 
         vm.prank(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA);
         paymaster.withdrawTo(payable(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA), Constants.ETH_0_1);
-        
+
         _assertWithdrawTo();
     }
 
@@ -445,7 +445,9 @@ contract TestSuperAdminEoa is Helpers {
         _deposit();
         _assertDeposit();
 
-        bytes memory data = abi.encodeWithSelector(paymaster.withdrawTo.selector, payable(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA), Constants.ETH_0_1);
+        bytes memory data = abi.encodeWithSelector(
+            paymaster.withdrawTo.selector, payable(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA), Constants.ETH_0_1
+        );
 
         (PackedUserOperation[] memory u, bytes32 hash) = _getUserOp(
             address(paymaster),
@@ -470,7 +472,15 @@ contract TestSuperAdminEoa is Helpers {
             abi.encodeWithSelector(IERC20.approve.selector, address(paymaster), type(uint256).max);
 
         calls.push(_encodeCall(address(sponsorERC20), 0, dataApprove));
-        calls.push(_encodeCall(address(paymaster), 0.0 ether, abi.encodeWithSelector(paymaster.withdrawTo.selector, payable(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA), Constants.ETH_0_1)));
+        calls.push(
+            _encodeCall(
+                address(paymaster),
+                0.0 ether,
+                abi.encodeWithSelector(
+                    paymaster.withdrawTo.selector, payable(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA), Constants.ETH_0_1
+                )
+            )
+        );
 
         bytes memory data = abi.encodeWithSelector(paymaster.executeBatch.selector, calls);
 
@@ -487,6 +497,209 @@ contract TestSuperAdminEoa is Helpers {
 
         _relayUserOp(u);
         _assertWithdrawTo();
+    }
+
+    // ------------------------------------------------------------------------------------
+    //
+    //                                    function addStake()
+    //
+    // ------------------------------------------------------------------------------------
+
+    function test_super_admin_eoa_add_stake_direct() external {
+        _stake();
+        _assertStaked();
+    }
+
+    function test_super_admin_eoa_add_stake_aa_mode_00() external {
+        calls.push(
+            _encodeCall(
+                address(paymaster),
+                Constants.ETH_0_1,
+                abi.encodeWithSelector(paymaster.addStake.selector, Constants.UNSTAKE_DELAY)
+            )
+        );
+        bytes memory data = abi.encodeWithSelector(paymaster.executeBatch.selector, calls);
+
+        (PackedUserOperation[] memory u, bytes32 hash) = _getUserOp(
+            address(paymaster),
+            __PAYMASTER_SUPER_ADMIN_EOA,
+            data,
+            Sponsor_Type.ETH,
+            Allow_Bundlers.ALL,
+            SignerType.Secp256k1
+        );
+
+        u[0].signature = _packEoaSigner(__PAYMASTER_SUPER_ADMIN_EOA, hash);
+
+        _relayUserOp(u);
+        _assertStaked();
+    }
+
+    function test_super_admin_eoa_add_stake_aa_mode_01() external {
+        bytes memory dataApprove =
+            abi.encodeWithSelector(IERC20.approve.selector, address(paymaster), type(uint256).max);
+
+        calls.push(_encodeCall(address(sponsorERC20), 0, dataApprove));
+        calls.push(
+            _encodeCall(
+                address(paymaster),
+                Constants.ETH_0_1,
+                abi.encodeWithSelector(paymaster.addStake.selector, Constants.UNSTAKE_DELAY)
+            )
+        );
+
+        bytes memory data = abi.encodeWithSelector(paymaster.executeBatch.selector, calls);
+
+        (PackedUserOperation[] memory u, bytes32 hash) = _getUserOp(
+            address(paymaster),
+            __PAYMASTER_SUPER_ADMIN_EOA,
+            data,
+            Sponsor_Type.ERC20,
+            Allow_Bundlers.ALL,
+            SignerType.Secp256k1
+        );
+
+        u[0].signature = _packEoaSigner(__PAYMASTER_SUPER_ADMIN_EOA, hash);
+
+        _relayUserOp(u);
+        _assertStaked();
+    }
+
+    // ------------------------------------------------------------------------------------
+    //
+    //                                    function unlockStake()
+    //
+    // ------------------------------------------------------------------------------------
+
+    function test_super_admin_eoa_unlock_stake_direct() external {
+        _stake();
+        _assertStaked();
+
+        _unlockStake();
+        _assertUnlocked();
+    }
+
+    function test_super_admin_eoa_unlock_stake_aa_mode_00() external {
+        _stake();
+        _assertStaked();
+
+        bytes memory data = abi.encodeWithSelector(paymaster.unlockStake.selector);
+
+        (PackedUserOperation[] memory u, bytes32 hash) = _getUserOp(
+            address(paymaster),
+            __PAYMASTER_SUPER_ADMIN_EOA,
+            data,
+            Sponsor_Type.ETH,
+            Allow_Bundlers.ALL,
+            SignerType.Secp256k1
+        );
+
+        u[0].signature = _packEoaSigner(__PAYMASTER_SUPER_ADMIN_EOA, hash);
+
+        _relayUserOp(u);
+        _assertUnlocked();
+    }
+
+    function test_super_admin_eoa_unlock_stake_aa_mode_01() external {
+        _stake();
+        _assertStaked();
+
+        bytes memory dataApprove =
+            abi.encodeWithSelector(IERC20.approve.selector, address(paymaster), type(uint256).max);
+        bytes memory dataUnlockStake = abi.encodeWithSelector(paymaster.unlockStake.selector);
+
+        calls.push(_encodeCall(address(sponsorERC20), 0, dataApprove));
+        calls.push(_encodeCall(address(paymaster), 0, dataUnlockStake));
+
+        bytes memory data = abi.encodeWithSelector(paymaster.executeBatch.selector, calls);
+
+        (PackedUserOperation[] memory u, bytes32 hash) = _getUserOp(
+            address(paymaster),
+            __PAYMASTER_SUPER_ADMIN_EOA,
+            data,
+            Sponsor_Type.ERC20,
+            Allow_Bundlers.ALL,
+            SignerType.Secp256k1
+        );
+
+        u[0].signature = _packEoaSigner(__PAYMASTER_SUPER_ADMIN_EOA, hash);
+
+        _relayUserOp(u);
+        _assertUnlocked();
+    }
+
+    // ------------------------------------------------------------------------------------
+    //
+    //                                    function withdrawStake()
+    //
+    // ------------------------------------------------------------------------------------
+
+    function test_super_admin_eoa_withdraw_stake_direct() external {
+        _stake();
+        _assertStaked();
+
+        _unlockStake();
+        _assertUnlocked();
+
+        vm.warp(block.timestamp + Constants.UNSTAKE_DELAY);
+
+        vm.prank(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA);
+        paymaster.withdrawStake(payable(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA));
+
+        _assertWithdrawnStake();
+    }
+
+    function test_super_admin_eoa_withdraw_stake_aa_mode_00() external {
+        _stake();
+        _unlockStake();
+        vm.warp(block.timestamp + Constants.UNSTAKE_DELAY);
+
+        bytes memory data =
+            abi.encodeWithSelector(paymaster.withdrawStake.selector, payable(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA));
+
+        (PackedUserOperation[] memory u, bytes32 hash) = _getUserOp(
+            address(paymaster),
+            __PAYMASTER_SUPER_ADMIN_EOA,
+            data,
+            Sponsor_Type.ETH,
+            Allow_Bundlers.ALL,
+            SignerType.Secp256k1
+        );
+
+        u[0].signature = _packEoaSigner(__PAYMASTER_SUPER_ADMIN_EOA, hash);
+
+        _relayUserOp(u);
+        _assertWithdrawnStake();
+    }
+
+    function test_super_admin_eoa_withdraw_stake_aa_mode_01() external {
+        _stake();
+        _unlockStake();
+        vm.warp(block.timestamp + Constants.UNSTAKE_DELAY);
+
+        bytes memory dataApprove =
+            abi.encodeWithSelector(IERC20.approve.selector, address(paymaster), type(uint256).max);
+        bytes memory dataWithdrawStake =
+            abi.encodeWithSelector(paymaster.withdrawStake.selector, payable(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA));
+
+        calls.push(_encodeCall(address(sponsorERC20), 0, dataApprove));
+        calls.push(_encodeCall(address(paymaster), 0, dataWithdrawStake));
+
+        bytes memory data = abi.encodeWithSelector(paymaster.executeBatch.selector, calls);
+
+        (PackedUserOperation[] memory u, bytes32 hash) = _getUserOp(
+            address(paymaster),
+            __PAYMASTER_SUPER_ADMIN_EOA,
+            data,
+            Sponsor_Type.ERC20,
+            Allow_Bundlers.ALL,
+            SignerType.Secp256k1
+        );
+
+        u[0].signature = _packEoaSigner(__PAYMASTER_SUPER_ADMIN_EOA, hash);
+
+        _relayUserOp(u);
+        _assertWithdrawnStake();
     }
 
     // ------------------------------------------------------------------------------------
@@ -515,6 +728,16 @@ contract TestSuperAdminEoa is Helpers {
     function _deposit() internal {
         vm.prank(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA);
         paymaster.deposit{ value: 0.1 ether }();
+    }
+
+    function _stake() internal {
+        vm.prank(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA);
+        paymaster.addStake{ value: Constants.ETH_0_1 }(Constants.UNSTAKE_DELAY);
+    }
+
+    function _unlockStake() internal {
+        vm.prank(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA);
+        paymaster.unlockStake();
     }
 
     // ------------------------------------------------------------------------------------
@@ -561,6 +784,32 @@ contract TestSuperAdminEoa is Helpers {
     function _assertWithdrawTo() internal view {
         (IStakeManager.DepositInfo memory info) = IEntryPoint(address(entryPoint)).getDepositInfo(address(paymaster));
         assertApproxEqRel(info.deposit, (Constants.ETH_0_1), 0.01e18, "Not same deposit");
-        assertApproxEqRel(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA.balance, 900000000000000000, 0.01e18, "Not same balance");
+        assertApproxEqRel(
+            __PAYMASTER_SUPER_ADMIN_ADDRESS_EOA.balance, 900_000_000_000_000_000, 0.01e18, "Not same balance"
+        );
+    }
+
+    function _assertStaked() internal view {
+        (IStakeManager.DepositInfo memory info) = IEntryPoint(address(entryPoint)).getDepositInfo(address(paymaster));
+        assertTrue(info.staked, "Not staked");
+        assertEq(info.stake, Constants.ETH_0_1, "Not same stake");
+        assertEq(info.unstakeDelaySec, Constants.UNSTAKE_DELAY, "Not same unstakeDelaySec");
+        assertEq(info.withdrawTime, 0, "Not same withdrawTime");
+    }
+
+    function _assertUnlocked() internal view {
+        (IStakeManager.DepositInfo memory info) = IEntryPoint(address(entryPoint)).getDepositInfo(address(paymaster));
+        assertFalse(info.staked, "Still staked");
+        assertEq(info.stake, Constants.ETH_0_1, "Not same stake");
+        assertEq(info.unstakeDelaySec, Constants.UNSTAKE_DELAY, "Not same unstakeDelaySec");
+        assertGt(info.withdrawTime, 0, "withdrawTime not set");
+    }
+
+    function _assertWithdrawnStake() internal view {
+        (IStakeManager.DepositInfo memory info) = IEntryPoint(address(entryPoint)).getDepositInfo(address(paymaster));
+        assertFalse(info.staked, "Still staked");
+        assertEq(info.stake, 0, "Stake not zero");
+        assertEq(info.unstakeDelaySec, 0, "unstakeDelaySec not zero");
+        assertEq(info.withdrawTime, 0, "withdrawTime not zero");
     }
 }
