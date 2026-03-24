@@ -402,7 +402,7 @@ abstract contract Validations is BasePaymaster {
         return SIG_VALIDATION_FAILED;
     }
 
-    function _validateCallData(bytes calldata _callData) internal pure returns (bool) {
+    function _validateCallData(bytes calldata _callData) internal view returns (bool) {
         bytes4 sel = bytes4(LibBytes.loadCalldata(_callData, 0x00));
 
         if (sel != bytes4(0x34fcd5be)) {
@@ -412,19 +412,23 @@ abstract contract Validations is BasePaymaster {
         return _validateCalls(_callData);
     }
 
-    function _validateCalls(bytes calldata _callData) internal pure returns (bool) {
+    function _validateCalls(bytes calldata _callData) internal view returns (bool) {
         bytes calldata params = LibBytes.sliceCalldata(_callData, 4);
         bytes calldata arr = LibBytes.dynamicStructInCalldata(params, 0);
         uint256 arrLength = uint256(LibBytes.loadCalldata(arr, 0));
         bytes calldata arrData = LibBytes.sliceCalldata(arr, 0x20);
 
         for (uint256 i = 0; i < arrLength;) {
-            bytes calldata callTuple = LibBytes.dynamicStructInCalldata(arrData, i * 0x20);
-            bytes calldata data = LibBytes.bytesInCalldata(callTuple, 0x40);
+            bytes calldata calls = LibBytes.dynamicStructInCalldata(arrData, i * 0x20);
+            bytes calldata data = LibBytes.bytesInCalldata(calls, 0x40);
 
             if (data.length >= 4) {
-                if (!bytes4(LibBytes.loadCalldata(data, 0x00))._isAllowedSelector()) {
-                    return false;
+                bytes4 sel = bytes4(LibBytes.loadCalldata(data, 0x00));
+
+                if (sel == Types.APPROVE_SEL) {
+                    return address(uint160(uint256(LibBytes.loadCalldata(data, 0x04)))) == address(this);
+                } else {
+                    return sel._isAllowedSelector();
                 }
             }
 
