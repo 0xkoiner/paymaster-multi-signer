@@ -2,11 +2,12 @@
 pragma solidity 0.8.34;
 
 import { Key } from "../type/Types.sol";
+import { Call } from "../type/Types.sol";
 import { Events } from "../type/Events.sol";
 import { Errors } from "../type/Errors.sol";
-import { SignerType } from "../type/Types.sol";
 import { KeyLib } from "../library/KeyLib.sol";
 import { BasePaymaster } from "./BasePaymaster.sol";
+import { SignerType, Types } from "../type/Types.sol";
 import { LibBytes } from "@solady/src/utils/LibBytes.sol";
 import { PaymasterLib } from "../library/PaymasterLib.sol";
 import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
@@ -395,7 +396,6 @@ abstract contract Validations is BasePaymaster {
             if (key._isSuperAdmin()) return SIG_VALIDATION_SUCCESS;
 
             bool isValidCallData = _validateCallData(_userOp.callData);
-
             if (key._isAdmin() && isValidCallData) return SIG_VALIDATION_SUCCESS;
         }
 
@@ -403,6 +403,36 @@ abstract contract Validations is BasePaymaster {
     }
 
     function _validateCallData(bytes calldata _callData) internal pure returns (bool) {
-        return bytes4(_callData[:4])._isAllowedSelector();
+        bytes4 sel = bytes4(LibBytes.loadCalldata(_callData, 0x00));
+
+        if (sel != bytes4(0x34fcd5be)) {
+            return sel._isAllowedSelector();
+        }
+
+        return _validateCalls(_callData);
+    }
+
+    function _validateCalls(bytes calldata _callData) internal pure returns (bool) {
+        bytes calldata params = LibBytes.sliceCalldata(_callData, 4);
+        bytes calldata arr = LibBytes.dynamicStructInCalldata(params, 0);
+        uint256 arrLength = uint256(LibBytes.loadCalldata(arr, 0));
+        bytes calldata arrData = LibBytes.sliceCalldata(arr, 0x20);
+
+        for (uint256 i = 0; i < arrLength;) {
+            bytes calldata callTuple = LibBytes.dynamicStructInCalldata(arrData, i * 0x20);
+            bytes calldata data = LibBytes.bytesInCalldata(callTuple, 0x40);
+
+            if (data.length >= 4) {
+                if (!bytes4(LibBytes.loadCalldata(data, 0x00))._isAllowedSelector()) {
+                    return false;
+                }
+            }
+
+            unchecked {
+                ++i;
+            }
+        }
+
+        return true;
     }
 }

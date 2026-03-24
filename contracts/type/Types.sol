@@ -99,4 +99,6 @@ library Types {
     uint8 constant MODE_AND_ALLOW_ALL_BUNDLERS_LENGTH = 1;
     uint8 constant ERC20_PAYMASTER_DATA_LENGTH = 117;
     uint8 constant VERIFYING_PAYMASTER_DATA_LENGTH = 12;
+
+    bytes4 constant DEPOSIT_SEL = 0x34fcd5be;
 }
