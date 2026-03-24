@@ -100,6 +100,6 @@ library Types {
     uint8 constant ERC20_PAYMASTER_DATA_LENGTH = 117;
     uint8 constant VERIFYING_PAYMASTER_DATA_LENGTH = 12;
 
-    bytes4 constant DEPOSIT_SEL = 0x34fcd5be;
+    bytes4 constant EXECUTE_BATCH_SEL = 0x34fcd5be;
     bytes4 constant APPROVE_SEL = 0x095ea7b3;
 }

@@ -405,7 +405,7 @@ abstract contract Validations is BasePaymaster {
     function _validateCallData(bytes calldata _callData) internal view returns (bool) {
         bytes4 sel = bytes4(LibBytes.loadCalldata(_callData, 0x00));
 
-        if (sel != bytes4(0x34fcd5be)) {
+        if (sel != Types.EXECUTE_BATCH_SEL) {
             return sel._isAllowedSelector();
         }
 
