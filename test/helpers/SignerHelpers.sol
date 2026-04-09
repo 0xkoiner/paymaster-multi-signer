@@ -4,6 +4,7 @@ pragma solidity 0.8.34;
 import { Etch } from "../data/Etch.t.sol";
 import { Constants } from "../data/Constants.sol";
 import { P256 } from "../../contracts/library/P256.sol";
+import {stdJson} from "../../lib/forge-std/src/StdJson.sol";
 import { KeyLib } from "../../contracts/library/KeyLib.sol";
 import { WebAuthn } from "../../contracts/library/WebAuthn.sol";
 import { Key, SignerType } from "../../contracts/type/Types.sol";
@@ -28,6 +29,18 @@ contract SignerHelpers is Etch {
         bytes32 qy;
     }
 
+    struct WebAuthnData {
+        bool UVR;
+        bytes AUTHENTICATOR_DATA;
+        string CLIENT_DATA_JSON;
+        uint256 CHALLENGE_INDEX;
+        uint256 TYPE_INDEX;
+        bytes32 R;
+        bytes32 S;
+        bytes32 X;
+        bytes32 Y;
+    }
+
     // ------------------------------------------------------------------------------------
     //
     //                                       Storage
@@ -37,6 +50,8 @@ contract SignerHelpers is Etch {
     Key private k;
 
     bool internal transient prehash;
+
+    string private _root_path = vm.projectRoot();
 
     // ------------------------------------------------------------------------------------
     //
@@ -60,12 +75,47 @@ contract SignerHelpers is Etch {
         k.publicKey = _encodeKey(keccak256("x-webAuthn"), keccak256("y-webAuthn"));
     }
 
+    function _createKeyWebAuthn(TypeOfKey _typeOfKey, bytes32 _x, bytes32 _y) internal pure returns (Key memory k) {
+        k.expiry = _typeOfKey == TypeOfKey.SUPER_ADMIN ? type(uint40).max : Constants.EXPIRY;
+        k.keyType = SignerType.WebAuthnP256;
+        k.isSuperAdmin = _typeOfKey == TypeOfKey.SUPER_ADMIN ? true : false;
+        k.isAdmin = _typeOfKey == TypeOfKey.ADMIN ? true : false;
+        k.publicKey = _encodeKey(_x, _y);
+    }
+
     function _createKeySecp256k1(TypeOfKey _typeOfKey, address _eoa) internal pure returns (Key memory k) {
         k.expiry = _typeOfKey == TypeOfKey.SUPER_ADMIN ? type(uint40).max : Constants.EXPIRY;
         k.keyType = SignerType.Secp256k1;
         k.isSuperAdmin = _typeOfKey == TypeOfKey.SUPER_ADMIN ? true : false;
         k.isAdmin = _typeOfKey == TypeOfKey.ADMIN ? true : false;
         k.publicKey = _encodeKey(_eoa);
+    }
+
+    function _fetchWebAuthnSigner(
+        string memory _path,
+        string memory _key,
+        string memory _test
+    )
+        internal
+        view
+        returns (WebAuthnData memory signer)
+    {
+        string memory path = string.concat(_root_path, _path);
+        string memory json = vm.readFile(path);
+
+        string memory test = string.concat(".", _key, ".", _test);
+        string memory metadata = string.concat(test, ".metadata");
+        string memory signature = string.concat(test, ".signature");
+
+        signer.UVR = stdJson.readBool(json, string.concat(metadata, ".userVerificationRequired"));
+        signer.AUTHENTICATOR_DATA = stdJson.readBytes(json, string.concat(metadata, ".authenticatorData"));
+        signer.CLIENT_DATA_JSON = stdJson.readString(json, string.concat(metadata, ".clientDataJSON"));
+        signer.CHALLENGE_INDEX = stdJson.readUint(json, string.concat(metadata, ".challengeIndex"));
+        signer.TYPE_INDEX = stdJson.readUint(json, string.concat(metadata, ".typeIndex"));
+        signer.R = stdJson.readBytes32(json, string.concat(signature, ".r"));
+        signer.S = stdJson.readBytes32(json, string.concat(signature, ".s"));
+        signer.X = stdJson.readBytes32(json, string.concat(".", _key, ".x"));
+        signer.Y = stdJson.readBytes32(json, string.concat(".", _key, ".y"));
     }
 
     // Pack Eoa Signature
