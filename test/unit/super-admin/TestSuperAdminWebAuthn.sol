@@ -66,7 +66,7 @@ contract TestSuperAdminWebAuthn is Helpers {
     //
     // ------------------------------------------------------------------------------------
 
-    function test_super_admin_eoa_authorize_admin_aa_mode_00() external {
+    function test_super_admin_webauthn_authorize_admin_aa_mode_00() external {
         random = _createKeySecp256k1(TypeOfKey.ADMIN, randomEoa);
         expected.push(random);
 
@@ -85,7 +85,7 @@ contract TestSuperAdminWebAuthn is Helpers {
         _assert(expected);
     }
 
-    function test_super_admin_eoa_authorize_admin_aa_mode_01() external {
+    function test_super_admin_webauthn_authorize_admin_aa_mode_01() external {
         random = _createKeySecp256k1(TypeOfKey.ADMIN, randomEoa);
         expected.push(random);
 
@@ -119,7 +119,7 @@ contract TestSuperAdminWebAuthn is Helpers {
     //
     // ------------------------------------------------------------------------------------
 
-    function test_super_admin_eoa_revoke_admin_aa_mode_00() external {
+    function test_super_admin_webauthn_revoke_admin_aa_mode_00() external {
         random = _createKeySecp256k1(TypeOfKey.ADMIN, randomEoa);
         expected.push(random);
 
@@ -157,7 +157,7 @@ contract TestSuperAdminWebAuthn is Helpers {
         _assertRevoked(random);
     }
 
-    function test_super_admin_eoa_revoke_admin_aa_mode_01() external {
+    function test_super_admin_webauthn_revoke_admin_aa_mode_01() external {
         random = _createKeySecp256k1(TypeOfKey.ADMIN, randomEoa);
         expected.push(random);
 
@@ -206,7 +206,7 @@ contract TestSuperAdminWebAuthn is Helpers {
     //
     // ------------------------------------------------------------------------------------
 
-    function test_super_admin_eoa_add_signer_aa_mode_00() external {
+    function test_super_admin_webauthn_add_signer_aa_mode_00() external {
         random = _createKeySecp256k1(TypeOfKey.SIGNER, randomEoa);
         expected.push(random);
 
@@ -227,7 +227,7 @@ contract TestSuperAdminWebAuthn is Helpers {
         _assert(expected);
     }
 
-    function test_super_admin_eoa_add_signer_aa_mode_01() external {
+    function test_super_admin_webauthn_add_signer_aa_mode_01() external {
         random = _createKeySecp256k1(TypeOfKey.SIGNER, randomEoa);
         expected.push(random);
 
@@ -261,7 +261,7 @@ contract TestSuperAdminWebAuthn is Helpers {
     //
     // ------------------------------------------------------------------------------------
 
-    function test_super_admin_eoa_remove_signer_aa_mode_00() external {
+    function test_super_admin_webauthn_remove_signer_aa_mode_00() external {
         _addSigner();
 
         bytes memory data = abi.encodeWithSelector(paymaster.removeSigner.selector, random.hash());
@@ -281,7 +281,7 @@ contract TestSuperAdminWebAuthn is Helpers {
         _assertRevoked(random);
     }
 
-    function test_super_admin_eoa_remove_signer_aa_mode_01() external {
+    function test_super_admin_webauthn_remove_signer_aa_mode_01() external {
         // ADMIN cant execute executeBatch() function need to see what in this edge case to do
         _addSigner();
 
@@ -315,7 +315,7 @@ contract TestSuperAdminWebAuthn is Helpers {
     //
     // ------------------------------------------------------------------------------------
 
-    function test_super_admin_eoa_deposit_aa_mode_00() external {
+    function test_super_admin_webauthn_deposit_aa_mode_00() external {
         calls.push(_encodeCall(address(paymaster), 0.1 ether, abi.encodeWithSelector(paymaster.deposit.selector)));
         bytes memory data = abi.encodeWithSelector(paymaster.executeBatch.selector, calls);
 
@@ -334,7 +334,7 @@ contract TestSuperAdminWebAuthn is Helpers {
         _assertDeposit();
     }
 
-    function test_super_admin_eoa_deposit_aa_mode_01() external {
+    function test_super_admin_webauthn_deposit_aa_mode_01() external {
         // ADMIN cant execute executeBatch() function need to see what in this edge case to do
         _addSigner();
 
@@ -367,7 +367,7 @@ contract TestSuperAdminWebAuthn is Helpers {
     //
     // ------------------------------------------------------------------------------------
 
-    function test_super_admin_eoa_withdraw_to_aa_mode_00() external {
+    function test_super_admin_webauthn_withdraw_to_aa_mode_00() external {
         _deposit();
         _assertDeposit();
 
@@ -390,7 +390,7 @@ contract TestSuperAdminWebAuthn is Helpers {
         _assertWithdrawTo(Constants.ETH_0_1);
     }
 
-    function test_super_admin_eoa_withdraw_to_aa_mode_01() external {
+    function test_super_admin_webauthn_withdraw_to_aa_mode_01() external {
         _deposit();
         _assertDeposit();
 
@@ -431,7 +431,7 @@ contract TestSuperAdminWebAuthn is Helpers {
     //
     // ------------------------------------------------------------------------------------
 
-    function test_super_admin_eoa_add_stake_aa_mode_00() external {
+    function test_super_admin_webauthn_add_stake_aa_mode_00() external {
         calls.push(
             _encodeCall(
                 address(paymaster),
@@ -456,7 +456,7 @@ contract TestSuperAdminWebAuthn is Helpers {
         _assertStaked();
     }
 
-    function test_super_admin_eoa_add_stake_aa_mode_01() external {
+    function test_super_admin_webauthn_add_stake_aa_mode_01() external {
         bytes memory dataApprove =
             abi.encodeWithSelector(IERC20.approve.selector, address(paymaster), type(uint256).max);
 
@@ -492,7 +492,7 @@ contract TestSuperAdminWebAuthn is Helpers {
     //
     // ------------------------------------------------------------------------------------
 
-    function test_super_admin_eoa_unlock_stake_aa_mode_00() external {
+    function test_super_admin_webauthn_unlock_stake_aa_mode_00() external {
         _stake();
         _assertStaked();
 
@@ -513,7 +513,7 @@ contract TestSuperAdminWebAuthn is Helpers {
         _assertUnlocked();
     }
 
-    function test_super_admin_eoa_unlock_stake_aa_mode_01() external {
+    function test_super_admin_webauthn_unlock_stake_aa_mode_01() external {
         _stake();
         _assertStaked();
 
@@ -547,7 +547,7 @@ contract TestSuperAdminWebAuthn is Helpers {
     //
     // ------------------------------------------------------------------------------------
 
-    function test_super_admin_eoa_withdraw_stake_aa_mode_00() external {
+    function test_super_admin_webauthn_withdraw_stake_aa_mode_00() external {
         _stake();
         _unlockStake();
         vm.warp(block.timestamp + Constants.UNSTAKE_DELAY);
@@ -570,7 +570,7 @@ contract TestSuperAdminWebAuthn is Helpers {
         _assertWithdrawnStake();
     }
 
-    function test_super_admin_eoa_withdraw_stake_aa_mode_01() external {
+    function test_super_admin_webauthn_withdraw_stake_aa_mode_01() external {
         _stake();
         _unlockStake();
         vm.warp(block.timestamp + Constants.UNSTAKE_DELAY);
