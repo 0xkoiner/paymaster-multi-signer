@@ -6,20 +6,10 @@ import { Errors } from "../type/Errors.sol";
 import { KeyLib } from "../library/KeyLib.sol";
 import { KeysManager } from "./KeysManager.sol";
 import { LibBytes } from "@solady/src/utils/LibBytes.sol";
-import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 
-abstract contract ManagerAccessControl is AccessControl, Storage {
+abstract contract ManagerAccessControl is Storage {
     using KeyLib for *;
     using LibBytes for LibBytes.BytesStorage;
-
-    bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
-
-    modifier onlyAdminOrManager() {
-        if (!hasRole(DEFAULT_ADMIN_ROLE, msg.sender) && !hasRole(ManagerAccessControl.MANAGER_ROLE, msg.sender)) {
-            revert Errors.AccessControlUnauthorizedAccount(msg.sender);
-        }
-        _;
-    }
 
     modifier onlySuperAdminOrAdminKeyOrEp() {
         bytes32 hash = msg.sender.hash();

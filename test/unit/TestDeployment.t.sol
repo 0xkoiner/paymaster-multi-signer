@@ -74,11 +74,6 @@ contract TestDeployment is Helpers {
         assertEq(k.publicKey, superAdmin.publicKey, "Not same publicKey");
     }
 
-    // Test MANAGER_ROLE constant
-    function test_manager_role() external view {
-        assertEq(paymaster.MANAGER_ROLE(), keccak256("MANAGER_ROLE"), "Not same MANAGER_ROLE");
-    }
-
     // Test _expectedPenaltyGasCost calculation
     function test_expectedPenaltyGasCost() external view {
         // actualGas = actualGasCost / feePerGas + postOpGas = 1000000 / 10 + 50000 = 150000
