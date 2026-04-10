@@ -122,6 +122,14 @@ contract TestRevertsKeyManagement is Helpers {
         paymaster.removeSigner(admin.hash());
     }
 
+    function test_revert_removeSigner_nonexistent() external {
+        bytes32 fakeHash = keccak256("nonexistent");
+
+        vm.expectRevert(Errors.KeyDoesNotExist.selector);
+        vm.prank(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA);
+        paymaster.removeSigner(fakeHash);
+    }
+
     // ------------------------------------------------------------------------------------
     //
     //                       function revoke(bytes32 _keyHash)

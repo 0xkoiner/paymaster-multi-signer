@@ -163,6 +163,46 @@ contract TestRevertsAccessControl is Helpers {
 
     // ------------------------------------------------------------------------------------
     //
+    //           onlySuperAdminOrAdminKeyOrEp — signer rejected
+    //
+    // ------------------------------------------------------------------------------------
+
+    function test_revert_addSigner_signer() external {
+        random = _createKeySecp256k1(TypeOfKey.SIGNER, randomEoa);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.AccessControlUnauthorizedAccount.selector, __PAYMASTER_SIGNER_ADDRESS_EOA)
+        );
+        vm.prank(__PAYMASTER_SIGNER_ADDRESS_EOA);
+        paymaster.addSigner(random);
+    }
+
+    function test_revert_deposit_signer() external {
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.AccessControlUnauthorizedAccount.selector, __PAYMASTER_SIGNER_ADDRESS_EOA)
+        );
+        vm.prank(__PAYMASTER_SIGNER_ADDRESS_EOA);
+        paymaster.deposit();
+    }
+
+    function test_revert_addStake_signer() external {
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.AccessControlUnauthorizedAccount.selector, __PAYMASTER_SIGNER_ADDRESS_EOA)
+        );
+        vm.prank(__PAYMASTER_SIGNER_ADDRESS_EOA);
+        paymaster.addStake(Constants.UNSTAKE_DELAY);
+    }
+
+    function test_revert_unlockStake_signer() external {
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.AccessControlUnauthorizedAccount.selector, __PAYMASTER_SIGNER_ADDRESS_EOA)
+        );
+        vm.prank(__PAYMASTER_SIGNER_ADDRESS_EOA);
+        paymaster.unlockStake();
+    }
+
+    // ------------------------------------------------------------------------------------
+    //
     //           onlySuperAdminKeyOrEp — signer rejected
     //
     // ------------------------------------------------------------------------------------
@@ -177,12 +217,36 @@ contract TestRevertsAccessControl is Helpers {
         paymaster.authorizeAdmin(random);
     }
 
+    function test_revert_revoke_signer() external {
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.AccessControlUnauthorizedAccount.selector, __PAYMASTER_SIGNER_ADDRESS_EOA)
+        );
+        vm.prank(__PAYMASTER_SIGNER_ADDRESS_EOA);
+        paymaster.revoke(signer.hash());
+    }
+
     function test_revert_removeSigner_signer() external {
         vm.expectRevert(
             abi.encodeWithSelector(Errors.AccessControlUnauthorizedAccount.selector, __PAYMASTER_SIGNER_ADDRESS_EOA)
         );
         vm.prank(__PAYMASTER_SIGNER_ADDRESS_EOA);
         paymaster.removeSigner(signer.hash());
+    }
+
+    function test_revert_withdrawTo_signer() external {
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.AccessControlUnauthorizedAccount.selector, __PAYMASTER_SIGNER_ADDRESS_EOA)
+        );
+        vm.prank(__PAYMASTER_SIGNER_ADDRESS_EOA);
+        paymaster.withdrawTo(payable(__PAYMASTER_SIGNER_ADDRESS_EOA), Constants.ETH_0_1);
+    }
+
+    function test_revert_withdrawStake_signer() external {
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.AccessControlUnauthorizedAccount.selector, __PAYMASTER_SIGNER_ADDRESS_EOA)
+        );
+        vm.prank(__PAYMASTER_SIGNER_ADDRESS_EOA);
+        paymaster.withdrawStake(payable(__PAYMASTER_SIGNER_ADDRESS_EOA));
     }
 
     // ------------------------------------------------------------------------------------
