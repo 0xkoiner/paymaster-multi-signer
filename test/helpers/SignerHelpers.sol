@@ -4,7 +4,7 @@ pragma solidity 0.8.34;
 import { Etch } from "../data/Etch.t.sol";
 import { Constants } from "../data/Constants.sol";
 import { P256 } from "../../contracts/library/P256.sol";
-import {stdJson} from "../../lib/forge-std/src/StdJson.sol";
+import { stdJson } from "../../lib/forge-std/src/StdJson.sol";
 import { KeyLib } from "../../contracts/library/KeyLib.sol";
 import { WebAuthn } from "../../contracts/library/WebAuthn.sol";
 import { Key, SignerType } from "../../contracts/type/Types.sol";
@@ -104,7 +104,7 @@ contract SignerHelpers is Etch {
         (bytes memory signature,) = _signHashWithWebAuthnKey(_hash, Constants.WEBAUTHN_SUPER_ADMIN_PK);
         return abi.encodePacked(SignerType.WebAuthnP256, signature);
     }
-    
+
     function _encodeKey(address _eoa) internal pure returns (bytes memory) {
         return abi.encode(_eoa);
     }
@@ -155,7 +155,10 @@ contract SignerHelpers is Etch {
     function _signHashWithWebAuthnKey(
         bytes32 _hash,
         string memory _privateKey
-    ) internal returns (bytes memory signature, P256PubKey memory pK) {
+    )
+        internal
+        returns (bytes memory signature, P256PubKey memory pK)
+    {
         string[] memory cmd = new string[](5);
         cmd[0] = "npx";
         cmd[1] = "tsx";

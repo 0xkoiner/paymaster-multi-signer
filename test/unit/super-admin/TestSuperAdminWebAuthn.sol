@@ -55,7 +55,7 @@ contract TestSuperAdminWebAuthn is Helpers {
         _deal(__7702_ADDRESS_EOA, Constants.ETH_1);
         _deal(address(paymaster), Constants.ETH_1);
 
-        IEntryPoint(Constants.EP_V9_ADDRESS).depositTo{value: Constants.ETH_0_1}(address(paymaster));
+        IEntryPoint(Constants.EP_V9_ADDRESS).depositTo{ value: Constants.ETH_0_1 }(address(paymaster));
 
         _mint(address(paymaster), Constants.ERC20_MINT_VAL_100_18, true);
     }
@@ -750,9 +750,7 @@ contract TestSuperAdminWebAuthn is Helpers {
     function _assertWithdrawTo(uint256 _expectedDeposit) internal view {
         (IStakeManager.DepositInfo memory info) = IEntryPoint(address(entryPoint)).getDepositInfo(address(paymaster));
         assertApproxEqRel(info.deposit, _expectedDeposit, 0.01e18, "Not same deposit");
-        assertApproxEqRel(
-            __PAYMASTER_SUPER_ADMIN_ADDRESS_EOA.balance, Constants.ETH_0_1, 0.01e18, "Not same balance"
-        );
+        assertApproxEqRel(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA.balance, Constants.ETH_0_1, 0.01e18, "Not same balance");
     }
 
     function _assertStaked() internal view {
