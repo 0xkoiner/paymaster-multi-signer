@@ -16,3 +16,4 @@ docs/
 .certora_internal/
 .claude/
 package-lock.json
+INVARIANTS.md
