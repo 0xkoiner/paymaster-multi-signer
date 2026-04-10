@@ -1,0 +1,370 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - lcov.info - contracts/library/P256Verifier.sol</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../index.html" title="Click to go to top-level">top level</a> - <a href="index.html" title="Click to go to directory contracts/library">contracts/library</a> - P256Verifier.sol<span style="font-size: 80%;"> (source / <a href="P256Verifier.sol.func-c.html" title="Click to go to function table">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">lcov.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntry">183</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2026-04-10 11:51:04</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+                  <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : // SPDX-License-Identifier: MIT</span>
+<span id="L2"><span class="lineNum">       2</span>              : pragma solidity ^0.8.4;</span>
+<span id="L3"><span class="lineNum">       3</span>              : </span>
+<span id="L4"><span class="lineNum">       4</span>              : /// @notice P256 verifier contract.</span>
+<span id="L5"><span class="lineNum">       5</span>              : /// @author Solady (https://github.com/vectorized/solady/blob/main/src/utils/P256.sol)</span>
+<span id="L6"><span class="lineNum">       6</span>              : /// @author Modified from OpenZeppelin</span>
+<span id="L7"><span class="lineNum">       7</span>              : /// (https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/cryptography/P256.sol) @dev</span>
+<span id="L8"><span class="lineNum">       8</span>              : /// Optimized for a balance between runtime gas and bytecode size.</span>
+<span id="L9"><span class="lineNum">       9</span>              : /// Returns `uint256(1)` on verification success.</span>
+<span id="L10"><span class="lineNum">      10</span>              : /// Unlike RIP-7212, this verifier returns `uint256(0)` on failure instead of empty return data.</span>
+<span id="L11"><span class="lineNum">      11</span>              : /// This contract will never revert.</span>
+<span id="L12"><span class="lineNum">      12</span>              : /// About 168k gas per call.</span>
+<span id="L13"><span class="lineNum">      13</span>              : /// For more details on the math, please refer to the comments in OpenZeppelin's implementation.</span>
+<span id="L14"><span class="lineNum">      14</span>              : contract P256Verifier {</span>
+<span id="L15"><span class="lineNum">      15</span>              :     uint256 private constant GX = 0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296;</span>
+<span id="L16"><span class="lineNum">      16</span>              :     uint256 private constant GY = 0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5;</span>
+<span id="L17"><span class="lineNum">      17</span>              :     uint256 private constant P = 0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF; // `A = P - 3`.</span>
+<span id="L18"><span class="lineNum">      18</span>              :     uint256 private constant N = 0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551;</span>
+<span id="L19"><span class="lineNum">      19</span>              :     uint256 private constant B = 0x5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B;</span>
+<span id="L20"><span class="lineNum">      20</span>              : </span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaUNC">           0 :     fallback() external payable {</span></span>
+<span id="L22"><span class="lineNum">      22</span>              :         assembly {</span>
+<span id="L23"><span class="lineNum">      23</span>              :             // For this implementation, we will use the memory without caring about</span>
+<span id="L24"><span class="lineNum">      24</span>              :             // the free memory pointer or zero pointer.</span>
+<span id="L25"><span class="lineNum">      25</span>              :             // The slots `0x00`, `0x20`, `0x60`, will not be accessed for the `Points[16]` array,</span>
+<span id="L26"><span class="lineNum">      26</span>              :             // and can be used for storing other variables.</span>
+<span id="L27"><span class="lineNum">      27</span>              :             // The slot `0x40` will be the zeroth element of the `Points[16]` array, which will be zero.</span>
+<span id="L28"><span class="lineNum">      28</span>              : </span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaUNC">           0 :             mstore(0x40, returndatasize())</span></span>
+<span id="L30"><span class="lineNum">      30</span>              : </span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaUNC">           0 :             function setJPoint(i, x, y, z) {</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaUNC">           0 :                 mstore(i, x)</span></span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaUNC">           0 :                 mstore(add(i, returndatasize()), y)</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaUNC">           0 :                 mstore(add(i, 0x40), z)</span></span>
+<span id="L35"><span class="lineNum">      35</span>              :             }</span>
+<span id="L36"><span class="lineNum">      36</span>              : </span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaUNC">           0 :             function jPointDouble(x, y, z) -&gt; rx, ry, rz {</span></span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaUNC">           0 :                 let p := P</span></span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaUNC">           0 :                 let yy := mulmod(y, y, p)</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaUNC">           0 :                 let zz := mulmod(z, z, p)</span></span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaUNC">           0 :                 let s := mulmod(4, mulmod(x, yy, p), p)</span></span>
+<span id="L42"><span class="lineNum">      42</span> <span class="tlaUNC">           0 :                 let m := addmod(mulmod(3, mulmod(x, x, p), p), mulmod(mload(returndatasize()), mulmod(zz, zz, p), p), p)</span></span>
+<span id="L43"><span class="lineNum">      43</span> <span class="tlaUNC">           0 :                 rx := addmod(mulmod(m, m, p), sub(p, addmod(s, s, p)), p)</span></span>
+<span id="L44"><span class="lineNum">      44</span> <span class="tlaUNC">           0 :                 ry := addmod(mulmod(m, addmod(s, sub(p, rx), p), p), sub(p, mulmod(8, mulmod(yy, yy, p), p)), p)</span></span>
+<span id="L45"><span class="lineNum">      45</span> <span class="tlaUNC">           0 :                 rz := mulmod(2, mulmod(y, z, p), p)</span></span>
+<span id="L46"><span class="lineNum">      46</span>              :             }</span>
+<span id="L47"><span class="lineNum">      47</span>              : </span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaUNC">           0 :             function setJPointDouble(i, j) {</span></span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaUNC">           0 :                 let x := mload(j)</span></span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaUNC">           0 :                 let y := mload(add(j, returndatasize()))</span></span>
+<span id="L51"><span class="lineNum">      51</span> <span class="tlaUNC">           0 :                 let z := mload(add(j, 0x40))</span></span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaUNC">           0 :                 let p := P</span></span>
+<span id="L53"><span class="lineNum">      53</span> <span class="tlaUNC">           0 :                 let yy := mulmod(y, y, p)</span></span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaUNC">           0 :                 let zz := mulmod(z, z, p)</span></span>
+<span id="L55"><span class="lineNum">      55</span> <span class="tlaUNC">           0 :                 let s := mulmod(4, mulmod(x, yy, p), p)</span></span>
+<span id="L56"><span class="lineNum">      56</span> <span class="tlaUNC">           0 :                 let m := addmod(mulmod(3, mulmod(x, x, p), p), mulmod(mload(returndatasize()), mulmod(zz, zz, p), p), p)</span></span>
+<span id="L57"><span class="lineNum">      57</span> <span class="tlaUNC">           0 :                 let x2 := addmod(mulmod(m, m, p), sub(p, addmod(s, s, p)), p)</span></span>
+<span id="L58"><span class="lineNum">      58</span> <span class="tlaUNC">           0 :                 setJPoint(</span></span>
+<span id="L59"><span class="lineNum">      59</span>              :                     i,</span>
+<span id="L60"><span class="lineNum">      60</span>              :                     x2,</span>
+<span id="L61"><span class="lineNum">      61</span>              :                     addmod(mulmod(m, addmod(s, sub(p, x2), p), p), sub(p, mulmod(8, mulmod(yy, yy, p), p)), p),</span>
+<span id="L62"><span class="lineNum">      62</span>              :                     mulmod(2, mulmod(y, z, p), p)</span>
+<span id="L63"><span class="lineNum">      63</span>              :                 )</span>
+<span id="L64"><span class="lineNum">      64</span>              :             }</span>
+<span id="L65"><span class="lineNum">      65</span>              : </span>
+<span id="L66"><span class="lineNum">      66</span> <span class="tlaUNC">           0 :             function setJPointAdd(i, j, k) {</span></span>
+<span id="L67"><span class="lineNum">      67</span> <span class="tlaUNC">           0 :                 let x1 := mload(j)</span></span>
+<span id="L68"><span class="lineNum">      68</span> <span class="tlaUNC">           0 :                 let y1 := mload(add(j, returndatasize()))</span></span>
+<span id="L69"><span class="lineNum">      69</span> <span class="tlaUNC">           0 :                 let z1 := mload(add(j, 0x40))</span></span>
+<span id="L70"><span class="lineNum">      70</span> <span class="tlaUNC">           0 :                 let x2 := mload(k)</span></span>
+<span id="L71"><span class="lineNum">      71</span> <span class="tlaUNC">           0 :                 let y2 := mload(add(k, returndatasize()))</span></span>
+<span id="L72"><span class="lineNum">      72</span> <span class="tlaUNC">           0 :                 let z2 := mload(add(k, 0x40))</span></span>
+<span id="L73"><span class="lineNum">      73</span> <span class="tlaUNC">           0 :                 if iszero(z1) {</span></span>
+<span id="L74"><span class="lineNum">      74</span> <span class="tlaUNC">           0 :                     setJPoint(i, x2, y2, z2)</span></span>
+<span id="L75"><span class="lineNum">      75</span> <span class="tlaUNC">           0 :                     leave</span></span>
+<span id="L76"><span class="lineNum">      76</span>              :                 }</span>
+<span id="L77"><span class="lineNum">      77</span> <span class="tlaUNC">           0 :                 if iszero(z2) {</span></span>
+<span id="L78"><span class="lineNum">      78</span> <span class="tlaUNC">           0 :                     setJPoint(i, x1, y1, z1)</span></span>
+<span id="L79"><span class="lineNum">      79</span> <span class="tlaUNC">           0 :                     leave</span></span>
+<span id="L80"><span class="lineNum">      80</span>              :                 }</span>
+<span id="L81"><span class="lineNum">      81</span> <span class="tlaUNC">           0 :                 let p := P</span></span>
+<span id="L82"><span class="lineNum">      82</span> <span class="tlaUNC">           0 :                 let zz1 := mulmod(z1, z1, p)</span></span>
+<span id="L83"><span class="lineNum">      83</span> <span class="tlaUNC">           0 :                 let zz2 := mulmod(z2, z2, p)</span></span>
+<span id="L84"><span class="lineNum">      84</span> <span class="tlaUNC">           0 :                 let u1 := mulmod(x1, zz2, p)</span></span>
+<span id="L85"><span class="lineNum">      85</span> <span class="tlaUNC">           0 :                 let s1 := mulmod(y1, mulmod(zz2, z2, p), p)</span></span>
+<span id="L86"><span class="lineNum">      86</span> <span class="tlaUNC">           0 :                 let h := addmod(mulmod(x2, zz1, p), sub(p, u1), p)</span></span>
+<span id="L87"><span class="lineNum">      87</span> <span class="tlaUNC">           0 :                 let r := addmod(mulmod(y2, mulmod(zz1, z1, p), p), sub(p, s1), p)</span></span>
+<span id="L88"><span class="lineNum">      88</span> <span class="tlaUNC">           0 :                 if iszero(r) {</span></span>
+<span id="L89"><span class="lineNum">      89</span> <span class="tlaUNC">           0 :                     if iszero(h) {</span></span>
+<span id="L90"><span class="lineNum">      90</span> <span class="tlaUNC">           0 :                         setJPointDouble(i, k)</span></span>
+<span id="L91"><span class="lineNum">      91</span> <span class="tlaUNC">           0 :                         leave</span></span>
+<span id="L92"><span class="lineNum">      92</span>              :                     }</span>
+<span id="L93"><span class="lineNum">      93</span>              :                 }</span>
+<span id="L94"><span class="lineNum">      94</span> <span class="tlaUNC">           0 :                 let hh := mulmod(h, h, p)</span></span>
+<span id="L95"><span class="lineNum">      95</span> <span class="tlaUNC">           0 :                 let hhh := mulmod(h, hh, p)</span></span>
+<span id="L96"><span class="lineNum">      96</span> <span class="tlaUNC">           0 :                 let v := mulmod(u1, hh, p)</span></span>
+<span id="L97"><span class="lineNum">      97</span> <span class="tlaUNC">           0 :                 let x3 := addmod(addmod(mulmod(r, r, p), sub(p, hhh), p), sub(p, addmod(v, v, p)), p)</span></span>
+<span id="L98"><span class="lineNum">      98</span> <span class="tlaUNC">           0 :                 setJPoint(</span></span>
+<span id="L99"><span class="lineNum">      99</span>              :                     i,</span>
+<span id="L100"><span class="lineNum">     100</span>              :                     x3,</span>
+<span id="L101"><span class="lineNum">     101</span>              :                     addmod(mulmod(r, addmod(v, sub(p, x3), p), p), sub(p, mulmod(s1, hhh, p)), p),</span>
+<span id="L102"><span class="lineNum">     102</span>              :                     mulmod(h, mulmod(z1, z2, p), p)</span>
+<span id="L103"><span class="lineNum">     103</span>              :                 )</span>
+<span id="L104"><span class="lineNum">     104</span>              :             }</span>
+<span id="L105"><span class="lineNum">     105</span>              : </span>
+<span id="L106"><span class="lineNum">     106</span> <span class="tlaUNC">           0 :             let r := calldataload(0x20)</span></span>
+<span id="L107"><span class="lineNum">     107</span> <span class="tlaUNC">           0 :             let n := N</span></span>
+<span id="L108"><span class="lineNum">     108</span> <span class="tlaUNC">           0 :             let i := returndatasize()</span></span>
+<span id="L109"><span class="lineNum">     109</span>              : </span>
+<span id="L110"><span class="lineNum">     110</span>              :             {</span>
+<span id="L111"><span class="lineNum">     111</span> <span class="tlaUNC">           0 :                 let s := calldataload(0x40)</span></span>
+<span id="L112"><span class="lineNum">     112</span> <span class="tlaUNC">           0 :                 if lt(shr(1, n), s) { s := sub(n, s) }</span></span>
+<span id="L113"><span class="lineNum">     113</span>              : </span>
+<span id="L114"><span class="lineNum">     114</span>              :                 // Perform `modExp(s, N - 2, N)`.</span>
+<span id="L115"><span class="lineNum">     115</span>              :                 // After which, we can abuse `returndatasize()` to get `0x20`.</span>
+<span id="L116"><span class="lineNum">     116</span> <span class="tlaUNC">           0 :                 mstore(0x800, 0x20)</span></span>
+<span id="L117"><span class="lineNum">     117</span> <span class="tlaUNC">           0 :                 mstore(0x820, 0x20)</span></span>
+<span id="L118"><span class="lineNum">     118</span> <span class="tlaUNC">           0 :                 mstore(0x840, 0x20)</span></span>
+<span id="L119"><span class="lineNum">     119</span> <span class="tlaUNC">           0 :                 mstore(0x860, s)</span></span>
+<span id="L120"><span class="lineNum">     120</span> <span class="tlaUNC">           0 :                 mstore(0x880, sub(n, 2))</span></span>
+<span id="L121"><span class="lineNum">     121</span> <span class="tlaUNC">           0 :                 mstore(0x8a0, n)</span></span>
+<span id="L122"><span class="lineNum">     122</span>              : </span>
+<span id="L123"><span class="lineNum">     123</span> <span class="tlaUNC">           0 :                 let p := P</span></span>
+<span id="L124"><span class="lineNum">     124</span> <span class="tlaUNC">           0 :                 mstore(0x20, xor(3, p)) // Set `0x20` to `A`.</span></span>
+<span id="L125"><span class="lineNum">     125</span> <span class="tlaUNC">           0 :                 let Qx := calldataload(0x60)</span></span>
+<span id="L126"><span class="lineNum">     126</span> <span class="tlaUNC">           0 :                 let Qy := calldataload(0x80)</span></span>
+<span id="L127"><span class="lineNum">     127</span>              : </span>
+<span id="L128"><span class="lineNum">     128</span> <span class="tlaUNC">           0 :                 if iszero(</span></span>
+<span id="L129"><span class="lineNum">     129</span>              :                     and( // The arguments of `and` are evaluated last to first.</span>
+<span id="L130"><span class="lineNum">     130</span>              :                         and(</span>
+<span id="L131"><span class="lineNum">     131</span>              :                             and(</span>
+<span id="L132"><span class="lineNum">     132</span>              :                                 and(gt(calldatasize(), 0x9f), and(lt(iszero(r), lt(r, n)), lt(iszero(s), lt(s, n)))),</span>
+<span id="L133"><span class="lineNum">     133</span>              :                                 and(lt(Qx, p), lt(Qy, p))</span>
+<span id="L134"><span class="lineNum">     134</span>              :                             ),</span>
+<span id="L135"><span class="lineNum">     135</span>              :                             eq(</span>
+<span id="L136"><span class="lineNum">     136</span>              :                                 mulmod(Qy, Qy, p),</span>
+<span id="L137"><span class="lineNum">     137</span>              :                                 addmod(mulmod(addmod(mulmod(Qx, Qx, p), mload(returndatasize()), p), Qx, p), B, p)</span>
+<span id="L138"><span class="lineNum">     138</span>              :                             )</span>
+<span id="L139"><span class="lineNum">     139</span>              :                         ),</span>
+<span id="L140"><span class="lineNum">     140</span>              :                         and(</span>
+<span id="L141"><span class="lineNum">     141</span>              :                             // We need to check that the `returndatasize` is indeed 32,</span>
+<span id="L142"><span class="lineNum">     142</span>              :                             // so that we can return false if the chain does not have the modexp precompile.</span>
+<span id="L143"><span class="lineNum">     143</span>              :                             eq(returndatasize(), 0x20),</span>
+<span id="L144"><span class="lineNum">     144</span>              :                             staticcall(gas(), 0x05, 0x800, 0xc0, returndatasize(), 0x20)</span>
+<span id="L145"><span class="lineNum">     145</span>              :                         )</span>
+<span id="L146"><span class="lineNum">     146</span>              :                     )</span>
+<span id="L147"><span class="lineNum">     147</span> <span class="tlaUNC">           0 :                 ) { return(0x80, 0x20) }</span></span>
+<span id="L148"><span class="lineNum">     148</span>              : </span>
+<span id="L149"><span class="lineNum">     149</span>              :                 // We will multiply by `0x80` (i.e. `shl(7, i)`) instead</span>
+<span id="L150"><span class="lineNum">     150</span>              :                 // since the memory expansion costs are cheaper than doing `mul(0x60, i)`.</span>
+<span id="L151"><span class="lineNum">     151</span>              :                 // Also help combine the lookup expression for `u1` and `u2` in `jMultShamir`.</span>
+<span id="L152"><span class="lineNum">     152</span> <span class="tlaUNC">           0 :                 setJPoint(shl(7, 0x01), Qx, Qy, 1)</span></span>
+<span id="L153"><span class="lineNum">     153</span> <span class="tlaUNC">           0 :                 setJPoint(shl(7, 0x04), GX, GY, 1)</span></span>
+<span id="L154"><span class="lineNum">     154</span> <span class="tlaUNC">           0 :                 setJPointDouble(shl(7, 0x02), shl(7, 0x01))</span></span>
+<span id="L155"><span class="lineNum">     155</span> <span class="tlaUNC">           0 :                 setJPointDouble(shl(7, 0x08), shl(7, 0x04))</span></span>
+<span id="L156"><span class="lineNum">     156</span> <span class="tlaUNC">           0 :                 setJPointAdd(shl(7, 0x03), shl(7, 0x01), shl(7, 0x02))</span></span>
+<span id="L157"><span class="lineNum">     157</span> <span class="tlaUNC">           0 :                 setJPointAdd(shl(7, 0x05), shl(7, 0x01), shl(7, 0x04))</span></span>
+<span id="L158"><span class="lineNum">     158</span> <span class="tlaUNC">           0 :                 setJPointAdd(shl(7, 0x06), shl(7, 0x02), shl(7, 0x04))</span></span>
+<span id="L159"><span class="lineNum">     159</span> <span class="tlaUNC">           0 :                 setJPointAdd(shl(7, 0x07), shl(7, 0x03), shl(7, 0x04))</span></span>
+<span id="L160"><span class="lineNum">     160</span> <span class="tlaUNC">           0 :                 setJPointAdd(shl(7, 0x09), shl(7, 0x01), shl(7, 0x08))</span></span>
+<span id="L161"><span class="lineNum">     161</span> <span class="tlaUNC">           0 :                 setJPointAdd(shl(7, 0x0a), shl(7, 0x02), shl(7, 0x08))</span></span>
+<span id="L162"><span class="lineNum">     162</span> <span class="tlaUNC">           0 :                 setJPointAdd(shl(7, 0x0b), shl(7, 0x03), shl(7, 0x08))</span></span>
+<span id="L163"><span class="lineNum">     163</span> <span class="tlaUNC">           0 :                 setJPointAdd(shl(7, 0x0c), shl(7, 0x04), shl(7, 0x08))</span></span>
+<span id="L164"><span class="lineNum">     164</span> <span class="tlaUNC">           0 :                 setJPointAdd(shl(7, 0x0d), shl(7, 0x01), shl(7, 0x0c))</span></span>
+<span id="L165"><span class="lineNum">     165</span> <span class="tlaUNC">           0 :                 setJPointAdd(shl(7, 0x0e), shl(7, 0x02), shl(7, 0x0c))</span></span>
+<span id="L166"><span class="lineNum">     166</span> <span class="tlaUNC">           0 :                 setJPointAdd(shl(7, 0x0f), shl(7, 0x03), shl(7, 0x0c))</span></span>
+<span id="L167"><span class="lineNum">     167</span>              :             }</span>
+<span id="L168"><span class="lineNum">     168</span>              : </span>
+<span id="L169"><span class="lineNum">     169</span> <span class="tlaUNC">           0 :             let u1 := mulmod(calldataload(i), mload(i), n)</span></span>
+<span id="L170"><span class="lineNum">     170</span> <span class="tlaUNC">           0 :             let u2 := mulmod(r, mload(i), n)</span></span>
+<span id="L171"><span class="lineNum">     171</span> <span class="tlaUNC">           0 :             let y := i</span></span>
+<span id="L172"><span class="lineNum">     172</span> <span class="tlaUNC">           0 :             let x := i</span></span>
+<span id="L173"><span class="lineNum">     173</span> <span class="tlaUNC">           0 :             let z := i</span></span>
+<span id="L174"><span class="lineNum">     174</span> <span class="tlaUNC">           0 :             let p := P</span></span>
+<span id="L175"><span class="lineNum">     175</span> <span class="tlaUNC">           0 :             let A := mload(returndatasize())</span></span>
+<span id="L176"><span class="lineNum">     176</span> <span class="tlaUNC">           0 :             for { } 1 { } {</span></span>
+<span id="L177"><span class="lineNum">     177</span> <span class="tlaUNC">           0 :                 if z {</span></span>
+<span id="L178"><span class="lineNum">     178</span> <span class="tlaUNC">           0 :                     let yy := mulmod(y, y, p)</span></span>
+<span id="L179"><span class="lineNum">     179</span> <span class="tlaUNC">           0 :                     let zz := mulmod(z, z, p)</span></span>
+<span id="L180"><span class="lineNum">     180</span> <span class="tlaUNC">           0 :                     let s := mulmod(4, mulmod(x, yy, p), p)</span></span>
+<span id="L181"><span class="lineNum">     181</span> <span class="tlaUNC">           0 :                     let m := addmod(mulmod(3, mulmod(x, x, p), p), mulmod(A, mulmod(zz, zz, p), p), p)</span></span>
+<span id="L182"><span class="lineNum">     182</span> <span class="tlaUNC">           0 :                     let x2 := addmod(mulmod(m, m, p), sub(p, addmod(s, s, p)), p)</span></span>
+<span id="L183"><span class="lineNum">     183</span> <span class="tlaUNC">           0 :                     let y2 := addmod(mulmod(m, addmod(s, sub(p, x2), p), p), sub(p, mulmod(8, mulmod(yy, yy, p), p)), p)</span></span>
+<span id="L184"><span class="lineNum">     184</span> <span class="tlaUNC">           0 :                     let z2 := mulmod(2, mulmod(y, z, p), p)</span></span>
+<span id="L185"><span class="lineNum">     185</span> <span class="tlaUNC">           0 :                     yy := mulmod(y2, y2, p)</span></span>
+<span id="L186"><span class="lineNum">     186</span> <span class="tlaUNC">           0 :                     zz := mulmod(z2, z2, p)</span></span>
+<span id="L187"><span class="lineNum">     187</span> <span class="tlaUNC">           0 :                     s := mulmod(4, mulmod(x2, yy, p), p)</span></span>
+<span id="L188"><span class="lineNum">     188</span> <span class="tlaUNC">           0 :                     m := addmod(mulmod(3, mulmod(x2, x2, p), p), mulmod(A, mulmod(zz, zz, p), p), p)</span></span>
+<span id="L189"><span class="lineNum">     189</span> <span class="tlaUNC">           0 :                     x := addmod(mulmod(m, m, p), sub(p, addmod(s, s, p)), p)</span></span>
+<span id="L190"><span class="lineNum">     190</span> <span class="tlaUNC">           0 :                     z := mulmod(2, mulmod(y2, z2, p), p)</span></span>
+<span id="L191"><span class="lineNum">     191</span> <span class="tlaUNC">           0 :                     y := addmod(mulmod(m, addmod(s, sub(p, x), p), p), sub(p, mulmod(8, mulmod(yy, yy, p), p)), p)</span></span>
+<span id="L192"><span class="lineNum">     192</span>              :                 }</span>
+<span id="L193"><span class="lineNum">     193</span> <span class="tlaUNC">           0 :                 for { let o := or(and(shr(245, shl(i, u1)), 0x600), and(shr(247, shl(i, u2)), 0x180)) } 1 { } {</span></span>
+<span id="L194"><span class="lineNum">     194</span> <span class="tlaUNC">           0 :                     let z2 := mload(add(o, 0x40))</span></span>
+<span id="L195"><span class="lineNum">     195</span> <span class="tlaUNC">           0 :                     if or(iszero(z), iszero(z2)) {</span></span>
+<span id="L196"><span class="lineNum">     196</span> <span class="tlaUNC">           0 :                         if iszero(z2) { break }</span></span>
+<span id="L197"><span class="lineNum">     197</span> <span class="tlaUNC">           0 :                         x := mload(o)</span></span>
+<span id="L198"><span class="lineNum">     198</span> <span class="tlaUNC">           0 :                         y := mload(add(o, returndatasize()))</span></span>
+<span id="L199"><span class="lineNum">     199</span> <span class="tlaUNC">           0 :                         z := z2</span></span>
+<span id="L200"><span class="lineNum">     200</span> <span class="tlaUNC">           0 :                         break</span></span>
+<span id="L201"><span class="lineNum">     201</span>              :                     }</span>
+<span id="L202"><span class="lineNum">     202</span> <span class="tlaUNC">           0 :                     let zz1 := mulmod(z, z, p)</span></span>
+<span id="L203"><span class="lineNum">     203</span> <span class="tlaUNC">           0 :                     let zz2 := mulmod(z2, z2, p)</span></span>
+<span id="L204"><span class="lineNum">     204</span> <span class="tlaUNC">           0 :                     let u1_ := mulmod(x, zz2, p)</span></span>
+<span id="L205"><span class="lineNum">     205</span> <span class="tlaUNC">           0 :                     let s1 := mulmod(y, mulmod(zz2, z2, p), p)</span></span>
+<span id="L206"><span class="lineNum">     206</span> <span class="tlaUNC">           0 :                     let h := addmod(mulmod(mload(o), zz1, p), sub(p, u1_), p)</span></span>
+<span id="L207"><span class="lineNum">     207</span> <span class="tlaUNC">           0 :                     let r_ := addmod(mulmod(mload(add(o, returndatasize())), mulmod(zz1, z, p), p), sub(p, s1), p)</span></span>
+<span id="L208"><span class="lineNum">     208</span> <span class="tlaUNC">           0 :                     if iszero(r_) {</span></span>
+<span id="L209"><span class="lineNum">     209</span> <span class="tlaUNC">           0 :                         if iszero(h) {</span></span>
+<span id="L210"><span class="lineNum">     210</span> <span class="tlaUNC">           0 :                             x, y, z := jPointDouble(x, y, z)</span></span>
+<span id="L211"><span class="lineNum">     211</span> <span class="tlaUNC">           0 :                             break</span></span>
+<span id="L212"><span class="lineNum">     212</span>              :                         }</span>
+<span id="L213"><span class="lineNum">     213</span>              :                     }</span>
+<span id="L214"><span class="lineNum">     214</span> <span class="tlaUNC">           0 :                     let hh := mulmod(h, h, p)</span></span>
+<span id="L215"><span class="lineNum">     215</span> <span class="tlaUNC">           0 :                     let hhh := mulmod(h, hh, p)</span></span>
+<span id="L216"><span class="lineNum">     216</span> <span class="tlaUNC">           0 :                     let v := mulmod(u1_, hh, p)</span></span>
+<span id="L217"><span class="lineNum">     217</span> <span class="tlaUNC">           0 :                     x := addmod(addmod(mulmod(r_, r_, p), sub(p, hhh), p), sub(p, addmod(v, v, p)), p)</span></span>
+<span id="L218"><span class="lineNum">     218</span> <span class="tlaUNC">           0 :                     y := addmod(mulmod(r_, addmod(v, sub(p, x), p), p), sub(p, mulmod(s1, hhh, p)), p)</span></span>
+<span id="L219"><span class="lineNum">     219</span> <span class="tlaUNC">           0 :                     z := mulmod(h, mulmod(z, z2, p), p)</span></span>
+<span id="L220"><span class="lineNum">     220</span> <span class="tlaUNC">           0 :                     break</span></span>
+<span id="L221"><span class="lineNum">     221</span>              :                 }</span>
+<span id="L222"><span class="lineNum">     222</span>              :                 // Just unroll twice. Fully unrolling will only save around 1% to 2% gas, but make the</span>
+<span id="L223"><span class="lineNum">     223</span>              :                 // bytecode very bloated, which may incur more runtime costs after Verkle.</span>
+<span id="L224"><span class="lineNum">     224</span>              :                 // See: https://notes.ethereum.org/%40vbuterin/verkle_tree_eip</span>
+<span id="L225"><span class="lineNum">     225</span>              :                 // It's very unlikely that Verkle will come before the P256 precompile. But who knows?</span>
+<span id="L226"><span class="lineNum">     226</span> <span class="tlaUNC">           0 :                 if z {</span></span>
+<span id="L227"><span class="lineNum">     227</span> <span class="tlaUNC">           0 :                     let yy := mulmod(y, y, p)</span></span>
+<span id="L228"><span class="lineNum">     228</span> <span class="tlaUNC">           0 :                     let zz := mulmod(z, z, p)</span></span>
+<span id="L229"><span class="lineNum">     229</span> <span class="tlaUNC">           0 :                     let s := mulmod(4, mulmod(x, yy, p), p)</span></span>
+<span id="L230"><span class="lineNum">     230</span> <span class="tlaUNC">           0 :                     let m := addmod(mulmod(3, mulmod(x, x, p), p), mulmod(A, mulmod(zz, zz, p), p), p)</span></span>
+<span id="L231"><span class="lineNum">     231</span> <span class="tlaUNC">           0 :                     let x2 := addmod(mulmod(m, m, p), sub(p, addmod(s, s, p)), p)</span></span>
+<span id="L232"><span class="lineNum">     232</span> <span class="tlaUNC">           0 :                     let y2 := addmod(mulmod(m, addmod(s, sub(p, x2), p), p), sub(p, mulmod(8, mulmod(yy, yy, p), p)), p)</span></span>
+<span id="L233"><span class="lineNum">     233</span> <span class="tlaUNC">           0 :                     let z2 := mulmod(2, mulmod(y, z, p), p)</span></span>
+<span id="L234"><span class="lineNum">     234</span> <span class="tlaUNC">           0 :                     yy := mulmod(y2, y2, p)</span></span>
+<span id="L235"><span class="lineNum">     235</span> <span class="tlaUNC">           0 :                     zz := mulmod(z2, z2, p)</span></span>
+<span id="L236"><span class="lineNum">     236</span> <span class="tlaUNC">           0 :                     s := mulmod(4, mulmod(x2, yy, p), p)</span></span>
+<span id="L237"><span class="lineNum">     237</span> <span class="tlaUNC">           0 :                     m := addmod(mulmod(3, mulmod(x2, x2, p), p), mulmod(A, mulmod(zz, zz, p), p), p)</span></span>
+<span id="L238"><span class="lineNum">     238</span> <span class="tlaUNC">           0 :                     x := addmod(mulmod(m, m, p), sub(p, addmod(s, s, p)), p)</span></span>
+<span id="L239"><span class="lineNum">     239</span> <span class="tlaUNC">           0 :                     z := mulmod(2, mulmod(y2, z2, p), p)</span></span>
+<span id="L240"><span class="lineNum">     240</span> <span class="tlaUNC">           0 :                     y := addmod(mulmod(m, addmod(s, sub(p, x), p), p), sub(p, mulmod(8, mulmod(yy, yy, p), p)), p)</span></span>
+<span id="L241"><span class="lineNum">     241</span>              :                 }</span>
+<span id="L242"><span class="lineNum">     242</span> <span class="tlaUNC">           0 :                 for { let o := or(and(shr(243, shl(i, u1)), 0x600), and(shr(245, shl(i, u2)), 0x180)) } 1 { } {</span></span>
+<span id="L243"><span class="lineNum">     243</span> <span class="tlaUNC">           0 :                     let z2 := mload(add(o, 0x40))</span></span>
+<span id="L244"><span class="lineNum">     244</span> <span class="tlaUNC">           0 :                     if or(iszero(z), iszero(z2)) {</span></span>
+<span id="L245"><span class="lineNum">     245</span> <span class="tlaUNC">           0 :                         if iszero(z2) { break }</span></span>
+<span id="L246"><span class="lineNum">     246</span> <span class="tlaUNC">           0 :                         x := mload(o)</span></span>
+<span id="L247"><span class="lineNum">     247</span> <span class="tlaUNC">           0 :                         y := mload(add(o, returndatasize()))</span></span>
+<span id="L248"><span class="lineNum">     248</span> <span class="tlaUNC">           0 :                         z := z2</span></span>
+<span id="L249"><span class="lineNum">     249</span> <span class="tlaUNC">           0 :                         break</span></span>
+<span id="L250"><span class="lineNum">     250</span>              :                     }</span>
+<span id="L251"><span class="lineNum">     251</span> <span class="tlaUNC">           0 :                     let zz1 := mulmod(z, z, p)</span></span>
+<span id="L252"><span class="lineNum">     252</span> <span class="tlaUNC">           0 :                     let zz2 := mulmod(z2, z2, p)</span></span>
+<span id="L253"><span class="lineNum">     253</span> <span class="tlaUNC">           0 :                     let u1_ := mulmod(x, zz2, p)</span></span>
+<span id="L254"><span class="lineNum">     254</span> <span class="tlaUNC">           0 :                     let s1 := mulmod(y, mulmod(zz2, z2, p), p)</span></span>
+<span id="L255"><span class="lineNum">     255</span> <span class="tlaUNC">           0 :                     let h := addmod(mulmod(mload(o), zz1, p), sub(p, u1_), p)</span></span>
+<span id="L256"><span class="lineNum">     256</span> <span class="tlaUNC">           0 :                     let r_ := addmod(mulmod(mload(add(o, returndatasize())), mulmod(zz1, z, p), p), sub(p, s1), p)</span></span>
+<span id="L257"><span class="lineNum">     257</span> <span class="tlaUNC">           0 :                     if iszero(r_) {</span></span>
+<span id="L258"><span class="lineNum">     258</span> <span class="tlaUNC">           0 :                         if iszero(h) {</span></span>
+<span id="L259"><span class="lineNum">     259</span> <span class="tlaUNC">           0 :                             x, y, z := jPointDouble(x, y, z)</span></span>
+<span id="L260"><span class="lineNum">     260</span> <span class="tlaUNC">           0 :                             break</span></span>
+<span id="L261"><span class="lineNum">     261</span>              :                         }</span>
+<span id="L262"><span class="lineNum">     262</span>              :                     }</span>
+<span id="L263"><span class="lineNum">     263</span> <span class="tlaUNC">           0 :                     let hh := mulmod(h, h, p)</span></span>
+<span id="L264"><span class="lineNum">     264</span> <span class="tlaUNC">           0 :                     let hhh := mulmod(h, hh, p)</span></span>
+<span id="L265"><span class="lineNum">     265</span> <span class="tlaUNC">           0 :                     let v := mulmod(u1_, hh, p)</span></span>
+<span id="L266"><span class="lineNum">     266</span> <span class="tlaUNC">           0 :                     x := addmod(addmod(mulmod(r_, r_, p), sub(p, hhh), p), sub(p, addmod(v, v, p)), p)</span></span>
+<span id="L267"><span class="lineNum">     267</span> <span class="tlaUNC">           0 :                     y := addmod(mulmod(r_, addmod(v, sub(p, x), p), p), sub(p, mulmod(s1, hhh, p)), p)</span></span>
+<span id="L268"><span class="lineNum">     268</span> <span class="tlaUNC">           0 :                     z := mulmod(h, mulmod(z, z2, p), p)</span></span>
+<span id="L269"><span class="lineNum">     269</span> <span class="tlaUNC">           0 :                     break</span></span>
+<span id="L270"><span class="lineNum">     270</span>              :                 }</span>
+<span id="L271"><span class="lineNum">     271</span> <span class="tlaUNC">           0 :                 i := add(i, 4)</span></span>
+<span id="L272"><span class="lineNum">     272</span> <span class="tlaUNC">           0 :                 if eq(i, 256) { break }</span></span>
+<span id="L273"><span class="lineNum">     273</span>              :             }</span>
+<span id="L274"><span class="lineNum">     274</span>              : </span>
+<span id="L275"><span class="lineNum">     275</span>              :             // Returns 0 if `z == 0` which indicates that the result is a point at infinity.</span>
+<span id="L276"><span class="lineNum">     276</span> <span class="tlaUNC">           0 :             if iszero(z) { return(0x40, returndatasize()) }</span></span>
+<span id="L277"><span class="lineNum">     277</span>              : </span>
+<span id="L278"><span class="lineNum">     278</span>              :             // Perform `modExp(z, P - 2, P)`.</span>
+<span id="L279"><span class="lineNum">     279</span>              :             // `0x800`, `0x820, `0x840` are still set to `0x20`.</span>
+<span id="L280"><span class="lineNum">     280</span> <span class="tlaUNC">           0 :             mstore(0x860, z)</span></span>
+<span id="L281"><span class="lineNum">     281</span> <span class="tlaUNC">           0 :             mstore(0x880, sub(p, 2))</span></span>
+<span id="L282"><span class="lineNum">     282</span> <span class="tlaUNC">           0 :             mstore(0x8a0, p)</span></span>
+<span id="L283"><span class="lineNum">     283</span>              : </span>
+<span id="L284"><span class="lineNum">     284</span> <span class="tlaUNC">           0 :             mstore(</span></span>
+<span id="L285"><span class="lineNum">     285</span>              :                 returndatasize(),</span>
+<span id="L286"><span class="lineNum">     286</span>              :                 and( // The arguments of `and` are evaluated last to first.</span>
+<span id="L287"><span class="lineNum">     287</span>              :                     eq(mod(mulmod(x, mulmod(mload(returndatasize()), mload(returndatasize()), p), p), n), r),</span>
+<span id="L288"><span class="lineNum">     288</span>              :                     staticcall(gas(), 0x05, 0x800, 0xc0, returndatasize(), returndatasize())</span>
+<span id="L289"><span class="lineNum">     289</span>              :                 )</span>
+<span id="L290"><span class="lineNum">     290</span>              :             )</span>
+<span id="L291"><span class="lineNum">     291</span> <span class="tlaUNC">           0 :             return(returndatasize(), returndatasize())</span></span>
+<span id="L292"><span class="lineNum">     292</span>              :         }</span>
+<span id="L293"><span class="lineNum">     293</span>              :     }</span>
+<span id="L294"><span class="lineNum">     294</span>              : }</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.4-0</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>
