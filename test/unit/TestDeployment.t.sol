@@ -88,10 +88,10 @@ contract TestDeployment is Helpers {
         // result = penalty * feePerGas = 15000 * 10 = 150000
         uint256 result = paymaster._expectedPenaltyGasCost(
             1_000_000, // actualGasCost
-            10,        // actualUserOpFeePerGas
-            50_000,    // postOpGas
-            100_000,   // preOpGasApproximation
-            200_000    // executionGasLimit
+            10, // actualUserOpFeePerGas
+            50_000, // postOpGas
+            100_000, // preOpGasApproximation
+            200_000 // executionGasLimit
         );
         assertEq(result, 150_000, "Penalty gas cost mismatch");
     }
