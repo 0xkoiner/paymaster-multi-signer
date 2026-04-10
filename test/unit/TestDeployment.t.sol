@@ -44,6 +44,58 @@ contract TestDeployment is Helpers {
         _assertBundlers();
     }
 
+    // Test getDeposit returns correct balance
+    function test_getDeposit() external {
+        vm.deal(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA, Constants.ETH_1);
+        vm.prank(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA);
+        paymaster.deposit{ value: Constants.ETH_0_1 }();
+
+        assertEq(paymaster.getDeposit(), Constants.ETH_0_1, "Not same deposit");
+    }
+
+    // Test keyAt returns correct key by index
+    function test_keyAt() external view {
+        Key memory k0 = paymaster.keyAt(0);
+        Key memory k1 = paymaster.keyAt(1);
+        Key memory k2 = paymaster.keyAt(2);
+
+        assertEq(k0.publicKey, superAdmin.publicKey, "keyAt(0) publicKey mismatch");
+        assertEq(k1.publicKey, admin.publicKey, "keyAt(1) publicKey mismatch");
+        assertEq(k2.publicKey, signer.publicKey, "keyAt(2) publicKey mismatch");
+    }
+
+    // Test getKey returns correct key by hash
+    function test_getKey() external view {
+        Key memory k = paymaster.getKey(superAdmin.hash());
+        assertEq(k.expiry, superAdmin.expiry, "Not same expiry");
+        assertEq(uint8(k.keyType), uint8(superAdmin.keyType), "Not same keyType");
+        assertEq(k.isSuperAdmin, superAdmin.isSuperAdmin, "Not same isSuperAdmin");
+        assertEq(k.isAdmin, superAdmin.isAdmin, "Not same isAdmin");
+        assertEq(k.publicKey, superAdmin.publicKey, "Not same publicKey");
+    }
+
+    // Test MANAGER_ROLE constant
+    function test_manager_role() external view {
+        assertEq(paymaster.MANAGER_ROLE(), keccak256("MANAGER_ROLE"), "Not same MANAGER_ROLE");
+    }
+
+    // Test _expectedPenaltyGasCost calculation
+    function test_expectedPenaltyGasCost() external view {
+        // actualGas = actualGasCost / feePerGas + postOpGas = 1000000 / 10 + 50000 = 150000
+        // executionGasUsed = actualGas - preOpGas = 150000 - 100000 = 50000
+        // unusedGas = executionGasLimit - executionGasUsed = 200000 - 50000 = 150000
+        // penalty = unusedGas * 10 / 100 = 15000
+        // result = penalty * feePerGas = 15000 * 10 = 150000
+        uint256 result = paymaster._expectedPenaltyGasCost(
+            1_000_000, // actualGasCost
+            10,        // actualUserOpFeePerGas
+            50_000,    // postOpGas
+            100_000,   // preOpGasApproximation
+            200_000    // executionGasLimit
+        );
+        assertEq(result, 150_000, "Penalty gas cost mismatch");
+    }
+
     // ------------------------------------------------------------------------------------
     //
     //                                        Helpers
