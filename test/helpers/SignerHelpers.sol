@@ -29,18 +29,6 @@ contract SignerHelpers is Etch {
         bytes32 qy;
     }
 
-    struct WebAuthnData {
-        bool UVR;
-        bytes AUTHENTICATOR_DATA;
-        string CLIENT_DATA_JSON;
-        uint256 CHALLENGE_INDEX;
-        uint256 TYPE_INDEX;
-        bytes32 R;
-        bytes32 S;
-        bytes32 X;
-        bytes32 Y;
-    }
-
     // ------------------------------------------------------------------------------------
     //
     //                                       Storage
@@ -93,29 +81,17 @@ contract SignerHelpers is Etch {
 
     function _fetchWebAuthnSigner(
         string memory _path,
-        string memory _key,
-        string memory _test
+        string memory _key
     )
         internal
         view
-        returns (WebAuthnData memory signer)
+        returns (P256PubKey memory signer)
     {
         string memory path = string.concat(_root_path, _path);
         string memory json = vm.readFile(path);
 
-        string memory test = string.concat(".", _key, ".", _test);
-        string memory metadata = string.concat(test, ".metadata");
-        string memory signature = string.concat(test, ".signature");
-
-        signer.UVR = stdJson.readBool(json, string.concat(metadata, ".userVerificationRequired"));
-        signer.AUTHENTICATOR_DATA = stdJson.readBytes(json, string.concat(metadata, ".authenticatorData"));
-        signer.CLIENT_DATA_JSON = stdJson.readString(json, string.concat(metadata, ".clientDataJSON"));
-        signer.CHALLENGE_INDEX = stdJson.readUint(json, string.concat(metadata, ".challengeIndex"));
-        signer.TYPE_INDEX = stdJson.readUint(json, string.concat(metadata, ".typeIndex"));
-        signer.R = stdJson.readBytes32(json, string.concat(signature, ".r"));
-        signer.S = stdJson.readBytes32(json, string.concat(signature, ".s"));
-        signer.X = stdJson.readBytes32(json, string.concat(".", _key, ".x"));
-        signer.Y = stdJson.readBytes32(json, string.concat(".", _key, ".y"));
+        signer.qx = stdJson.readBytes32(json, string.concat(".", _key, ".x"));
+        signer.qy = stdJson.readBytes32(json, string.concat(".", _key, ".y"));
     }
 
     // Pack Eoa Signature
@@ -124,6 +100,11 @@ contract SignerHelpers is Etch {
         signature = abi.encodePacked(abi.encodePacked(SignerType.Secp256k1, r, s, v));
     }
 
+    function _packWebAuthnSigner(bytes32 _hash) internal virtual returns (bytes memory) {
+        (bytes memory signature,) = _signHashWithWebAuthnKey(_hash, Constants.WEBAUTHN_SUPER_ADMIN_PK);
+        return abi.encodePacked(SignerType.WebAuthnP256, signature);
+    }
+    
     function _encodeKey(address _eoa) internal pure returns (bytes memory) {
         return abi.encode(_eoa);
     }
@@ -167,6 +148,20 @@ contract SignerHelpers is Etch {
         cmd[1] = "tsx";
         cmd[2] = "script/WebAuthn.ts";
         cmd[3] = vm.toString(_hash);
+        signature = vm.ffi(cmd);
+        (pK.qx, pK.qy) = signature._unpackWebAuthnCoordinats();
+    }
+
+    function _signHashWithWebAuthnKey(
+        bytes32 _hash,
+        string memory _privateKey
+    ) internal returns (bytes memory signature, P256PubKey memory pK) {
+        string[] memory cmd = new string[](5);
+        cmd[0] = "npx";
+        cmd[1] = "tsx";
+        cmd[2] = "script/WebAuthn.ts";
+        cmd[3] = vm.toString(_hash);
+        cmd[4] = _privateKey;
         signature = vm.ffi(cmd);
         (pK.qx, pK.qy) = signature._unpackWebAuthnCoordinats();
     }

@@ -49,6 +49,8 @@ library Constants {
 
     string internal constant ADMIN_KEY = "admin";
 
+    string internal constant WEBAUTHN_SUPER_ADMIN_PK = "0xc9afa9d845ba75166b5c215767b1d6934e50c3db36e89b127b8a622b120f6721";
+
     string internal constant WEB_AUTHN_JSON_PATH = string.concat(ABS_PATH, "webAuthn.json");
 
     string internal constant P256_JSON_PATH  = string.concat(ABS_PATH, "p256.json");

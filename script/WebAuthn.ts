@@ -41,7 +41,10 @@ if (!digestHex) {
 
 // --- key generation ---------------------------------------------------------
 
-const privateKey = p256.utils.randomPrivateKey();
+const providedKey = args[1];
+const privateKey = providedKey
+    ? Hex.toBytes(providedKey as `0x${string}`)
+    : p256.utils.randomPrivateKey();
 const publicKey = p256.getPublicKey(privateKey, false);
 const qx = publicKey.slice(1, 33);
 const qy = publicKey.slice(33, 65);

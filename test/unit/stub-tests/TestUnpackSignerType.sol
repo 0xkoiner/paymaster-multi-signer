@@ -90,7 +90,7 @@ contract TestUnpackSignerType is Helpers {
     }
 
     // Pack WebAuthn Signature
-    function _packWebAuthnSigner(bytes32 _hash) internal returns (bytes memory signature) {
+    function _packWebAuthnSigner(bytes32 _hash) internal override returns (bytes memory signature) {
         (signature, pK) = _signHashWithWebAuthn(_hash);
         _authorizeSigner(pK, SignerType.WebAuthnP256);
         signature = abi.encodePacked(SignerType.WebAuthnP256, signature);
