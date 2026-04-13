@@ -107,20 +107,20 @@ abstract contract Validations is BasePaymaster {
             if (signerType == uint8(SignerType.P256)) {
                 (bytes32 r, bytes32 s, bytes32 qx, bytes32 qy, bool prehash) = signature._unpackP256Signature();
                 Key memory key = getKey(qx.hash(qy, SignerType.P256));
-                if (key._keyValidation() || key._isSigner()) {
+                if (key._keyValidation() && key._isSigner()) {
                     bytes32 digest = prehash ? EfficientHashLib.sha2(hash) : hash;
                     isSignatureValid = webAuthnVerifier.verifyP256Signature(digest, r, s, qx, qy);
                 }
             } else if (signerType == uint8(SignerType.WebAuthnP256)) {
                 (bytes32 qx, bytes32 qy) = signature._unpackWebAuthnCoordinats();
                 Key memory key = getKey(qx.hash(qy, SignerType.WebAuthnP256));
-                if (key._keyValidation() || key._isSigner()) {
+                if (key._keyValidation() && key._isSigner()) {
                     isSignatureValid = webAuthnVerifier.verifyEncodedSignature(hash, true, signature, qx, qy);
                 }
             } else if (signerType == uint8(SignerType.Secp256k1)) {
                 address recoveredSigner = ECDSA.recover(hash, signature);
                 Key memory key = getKey(recoveredSigner.hash());
-                isSignatureValid = (key._keyValidation() || key._isSigner());
+                isSignatureValid = (key._keyValidation() && key._isSigner());
             }
         }
 
