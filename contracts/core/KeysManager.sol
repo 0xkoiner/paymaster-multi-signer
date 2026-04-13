@@ -8,14 +8,16 @@ import { KeyLib } from "../library/KeyLib.sol";
 import { SignerType } from "../type/Types.sol";
 import { LibBit } from "@solady/src/utils/LibBit.sol";
 import { LibBytes } from "@solady/src/utils/LibBytes.sol";
+import { IKeysManager } from "../interface/IKeysManager.sol";
 import { ManagerAccessControl } from "./ManagerAccessControl.sol";
 import { EnumerableSetLib } from "@solady/src/utils/EnumerableSetLib.sol";
 
-contract KeysManager is ManagerAccessControl {
+contract KeysManager is ManagerAccessControl, IKeysManager {
     using KeyLib for *;
     using EnumerableSetLib for *;
     using LibBytes for LibBytes.BytesStorage;
 
+    /// @inheritdoc IKeysManager
     function authorizeAdmin(Key memory _key) public onlySuperAdminKeyOrEp returns (bytes32 keyHash) {
         if (keyHashes.contains(_key.hash())) revert Errors.KeyAuthorized();
         if (!_key.isAdmin || _key.isSuperAdmin) revert Errors.IncorrectSignerRole();
@@ -23,6 +25,7 @@ contract KeysManager is ManagerAccessControl {
         keyHash = _addKey(_key);
     }
 
+    /// @inheritdoc IKeysManager
     function revoke(bytes32 _keyHash) public onlySuperAdminKeyOrEp {
         // Check the executor if the superAdmin
         _removeKey(_keyHash);
@@ -44,14 +47,17 @@ contract KeysManager is ManagerAccessControl {
         if (!keyHashes.remove(_keyHash)) revert Errors.KeyDoesNotExist();
     }
 
+    /// @inheritdoc IKeysManager
     function keyCount() public view virtual returns (uint256) {
         return keyHashes.length();
     }
 
+    /// @inheritdoc IKeysManager
     function keyAt(uint256 _i) public view virtual returns (Key memory) {
         return getKey(keyHashes.at(_i));
     }
 
+    /// @inheritdoc IKeysManager
     function getKey(bytes32 _keyHash) public view virtual returns (Key memory key) {
         bytes memory data = keyStorage[_keyHash].get();
         if (data.length == uint256(0)) revert Errors.KeyDoesNotExist();
@@ -66,6 +72,7 @@ contract KeysManager is ManagerAccessControl {
         }
     }
 
+    /// @inheritdoc IKeysManager
     function getKeys() public view virtual returns (Key[] memory keys, bytes32[] memory hashes) {
         uint256 totalCount = keyCount();
 

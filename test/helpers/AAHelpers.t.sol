@@ -4,7 +4,8 @@ pragma solidity 0.8.34;
 import { Constants } from "../data/Constants.sol";
 import { SignerHelpers } from "./SignerHelpers.sol";
 import { SignerType } from "../../contracts/type/Types.sol";
-import { IPaymaster } from "../../contracts/interface/IPaymaster.sol";
+import { IValidations } from "../../contracts/interface/IValidations.sol";
+import { IBasePaymaster } from "../../contracts/interface/IBasePaymaster.sol";
 import { SignatureCheckerLib } from "lib/solady-v0.1.26/src/utils/SignatureCheckerLib.sol";
 import { IEntryPoint } from "lib/account-abstraction-v9/contracts/interfaces/IEntryPoint.sol";
 import { PackedUserOperation } from "lib/account-abstraction-v9/contracts/interfaces/PackedUserOperation.sol";
@@ -45,7 +46,7 @@ contract AAHelpers is SignerHelpers {
     // Deposit ETH into the Paymaster
     function _depositPaymaster() internal {
         vm.prank(address(__PAYMASTER_SUPER_ADMIN_ADDRESS_EOA));
-        IPaymaster(address(paymaster)).deposit{ value: Constants.ETH_0_1 }();
+        IBasePaymaster(address(paymaster)).deposit{ value: Constants.ETH_0_1 }();
     }
 
     // Get nonce for _sender from EntryPoint
@@ -78,7 +79,7 @@ contract AAHelpers is SignerHelpers {
             );
 
             bytes32 hash = SignatureCheckerLib.toEthSignedMessageHash(
-                IPaymaster(address(paymaster)).getHash(0, u[0], _signerType)
+                IValidations(address(paymaster)).getHash(0, u[0], _signerType)
             );
 
             if (_signerType == SignerType.P256) {
@@ -116,7 +117,7 @@ contract AAHelpers is SignerHelpers {
             );
 
             bytes32 hash = SignatureCheckerLib.toEthSignedMessageHash(
-                IPaymaster(address(paymaster)).getHash(1, u[0], _signerType)
+                IValidations(address(paymaster)).getHash(1, u[0], _signerType)
             );
 
             if (_signerType == SignerType.P256) {

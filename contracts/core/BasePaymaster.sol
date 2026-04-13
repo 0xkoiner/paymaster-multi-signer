@@ -4,10 +4,12 @@ pragma solidity 0.8.34;
 import { Call } from "../type/Types.sol";
 import { Errors } from "../type/Errors.sol";
 import { MultiSigner } from "./MultiSigner.sol";
+import { IBasePaymaster } from "../interface/IBasePaymaster.sol";
 import { Exec } from "@account-abstraction/contracts/utils/Exec.sol";
 import { PackedUserOperation } from "@account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 
-abstract contract BasePaymaster is MultiSigner {
+abstract contract BasePaymaster is MultiSigner, IBasePaymaster {
+    /// @inheritdoc IBasePaymaster
     function validateUserOp(
         PackedUserOperation calldata userOp,
         bytes32 userOpHash,
@@ -60,14 +62,17 @@ abstract contract BasePaymaster is MultiSigner {
         }
     }
 
+    /// @inheritdoc IBasePaymaster
     function deposit() public payable onlySuperAdminOrAdminKeyOrEp {
         entryPoint.depositTo{ value: msg.value }(address(this));
     }
 
+    /// @inheritdoc IBasePaymaster
     function withdrawTo(address payable _withdrawAddress, uint256 _amount) public onlySuperAdminKeyOrEp {
         entryPoint.withdrawTo(_withdrawAddress, _amount);
     }
 
+    /// @inheritdoc IBasePaymaster
     function addStake(uint32 _unstakeDelaySec) external payable onlySuperAdminOrAdminKeyOrEp {
         entryPoint.addStake{ value: msg.value }(_unstakeDelaySec);
     }
@@ -76,10 +81,12 @@ abstract contract BasePaymaster is MultiSigner {
         return entryPoint.balanceOf(address(this));
     }
 
+    /// @inheritdoc IBasePaymaster
     function unlockStake() external onlySuperAdminOrAdminKeyOrEp {
         entryPoint.unlockStake();
     }
 
+    /// @inheritdoc IBasePaymaster
     function withdrawStake(address payable _withdrawAddress) external onlySuperAdminKeyOrEp {
         entryPoint.withdrawStake(_withdrawAddress);
     }
@@ -90,6 +97,7 @@ abstract contract BasePaymaster is MultiSigner {
      * If the batch reverts, and it contains more than a single call, then wrap the revert with ExecuteError,
      *  to mark the failing call index.
      */
+    /// @inheritdoc IBasePaymaster
     function executeBatch(Call[] calldata calls) external virtual {
         _requireFromEntryPoint();
 

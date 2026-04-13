@@ -10,6 +10,7 @@ import { BasePaymaster } from "./BasePaymaster.sol";
 import { SignerType, Types } from "../type/Types.sol";
 import { LibBytes } from "@solady/src/utils/LibBytes.sol";
 import { PaymasterLib } from "../library/PaymasterLib.sol";
+import { IValidations } from "../interface/IValidations.sol";
 import { SafeTransferLib } from "@solady/src/utils/SafeTransferLib.sol";
 import { EfficientHashLib } from "@solady/src/utils/EfficientHashLib.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
@@ -22,11 +23,12 @@ import { SIG_VALIDATION_FAILED, SIG_VALIDATION_SUCCESS } from "@account-abstract
 
 using UserOperationLib for PackedUserOperation;
 
-abstract contract Validations is BasePaymaster {
+abstract contract Validations is BasePaymaster, IValidations {
     using KeyLib for *;
     using PaymasterLib for *;
     using LibBytes for LibBytes.BytesStorage;
 
+    /// @inheritdoc IValidations
     function validatePaymasterUserOp(
         PackedUserOperation calldata _userOp,
         bytes32 _userOpHash,
@@ -39,6 +41,7 @@ abstract contract Validations is BasePaymaster {
         return _validatePaymasterUserOp(_userOp, _userOpHash, _requiredPreFund);
     }
 
+    /// @inheritdoc IValidations
     function postOp(
         PostOpMode _mode,
         bytes calldata _context,
@@ -190,6 +193,7 @@ abstract contract Validations is BasePaymaster {
         return (context, validationData);
     }
 
+    /// @inheritdoc IValidations
     function _expectedPenaltyGasCost(
         uint256 _actualGasCost,
         uint256 _actualUserOpFeePerGas,
@@ -257,6 +261,7 @@ abstract contract Validations is BasePaymaster {
         );
     }
 
+    /// @inheritdoc IValidations
     function getHash(
         uint8 _mode,
         PackedUserOperation calldata _userOp,

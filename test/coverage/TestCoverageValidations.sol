@@ -5,7 +5,7 @@ import { Constants } from "../data/Constants.sol";
 import { Helpers } from "../helpers/Helpers.t.sol";
 import { KeyLib } from "../../contracts/library/KeyLib.sol";
 import { Key, SignerType } from "../../contracts/type/Types.sol";
-import { IPaymaster } from "../../contracts/interface/IPaymaster.sol";
+import { IValidations } from "../../contracts/interface/IValidations.sol";
 import { IEntryPoint } from "lib/account-abstraction-v9/contracts/interfaces/IEntryPoint.sol";
 import { PackedUserOperation } from "lib/account-abstraction-v9/contracts/interfaces/PackedUserOperation.sol";
 
@@ -55,7 +55,7 @@ contract TestCoverageValidations is Helpers {
             new bytes(65)
         );
 
-        bytes32 hash = IPaymaster(address(paymaster)).getHash(1, u, SignerType.Secp256k1);
+        bytes32 hash = IValidations(address(paymaster)).getHash(1, u, SignerType.Secp256k1);
         assertTrue(hash != bytes32(0), "Hash should not be zero");
     }
 
@@ -69,7 +69,7 @@ contract TestCoverageValidations is Helpers {
             new bytes(65)
         );
 
-        bytes32 hash = IPaymaster(address(paymaster)).getHash(1, u, SignerType.Secp256k1);
+        bytes32 hash = IValidations(address(paymaster)).getHash(1, u, SignerType.Secp256k1);
         assertTrue(hash != bytes32(0), "Hash should not be zero");
     }
 
@@ -83,7 +83,7 @@ contract TestCoverageValidations is Helpers {
             new bytes(65)
         );
 
-        bytes32 hash = IPaymaster(address(paymaster)).getHash(1, u, SignerType.Secp256k1);
+        bytes32 hash = IValidations(address(paymaster)).getHash(1, u, SignerType.Secp256k1);
         assertTrue(hash != bytes32(0), "Hash should not be zero");
     }
 
@@ -99,7 +99,7 @@ contract TestCoverageValidations is Helpers {
         );
         u.paymasterAndData = abi.encodePacked(base, optionals, uint8(2), new bytes(65));
 
-        bytes32 hash = IPaymaster(address(paymaster)).getHash(1, u, SignerType.Secp256k1);
+        bytes32 hash = IValidations(address(paymaster)).getHash(1, u, SignerType.Secp256k1);
         assertTrue(hash != bytes32(0), "Hash should not be zero");
     }
 
