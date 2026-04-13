@@ -11,7 +11,10 @@ import { PackedUserOperation } from "@account-abstraction/contracts/interfaces/P
 using KeyLib for bytes;
 using UserOperationLib for PackedUserOperation;
 
+/// @title PaymasterLib
+/// @dev Parsing, context building, and cost conversion helpers for the paymaster's paymasterAndData field.
 library PaymasterLib {
+    /// @dev Extract the mode, allowAllBundlers flag, and paymaster config from raw paymasterAndData bytes.
     function _parsePaymasterAndData(
         bytes calldata _paymasterAndData,
         uint256 _paymasterDataOffset
@@ -35,6 +38,7 @@ library PaymasterLib {
         return (mode, allowAllBundlers, paymasterConfig);
     }
 
+    /// @dev Parse verifying mode config: validUntil, validAfter, signerType, and signature.
     function _parseVerifyingConfig(bytes calldata _paymasterConfig)
         internal
         pure
@@ -55,6 +59,8 @@ library PaymasterLib {
         return (validUntil, validAfter, signerType, signature);
     }
 
+    /// @dev Parse ERC-20 mode config with optional fields (preFund, constantFee, recipient)
+    ///      controlled by bit flags in the first byte. Validates token, exchangeRate, and signature length.
     function _parseErc20Config(bytes calldata _paymasterConfig)
         internal
         pure
@@ -140,6 +146,8 @@ library PaymasterLib {
         return config;
     }
 
+    /// @dev ABI-encode an `ERC20PostOpContext` struct from the userOp, config, and required pre-fund
+    ///      for use by `_postOp` after execution.
     function _createPostOpContext(
         PackedUserOperation calldata _userOp,
         bytes32 _userOpHash,
@@ -175,10 +183,13 @@ library PaymasterLib {
         );
     }
 
+    /// @dev ABI-decode the postOp context bytes back into an `ERC20PostOpContext` struct.
     function _parsePostOpContext(bytes calldata _context) internal pure returns (ERC20PostOpContext memory ctx) {
         ctx = abi.decode(_context, (ERC20PostOpContext));
     }
 
+    /// @dev Convert a native gas cost (including postOp overhead) to the equivalent ERC-20 token amount
+    ///      using the given exchange rate (18-decimal fixed point).
     function _getCostInToken(
         uint256 _actualGasCost,
         uint256 _postOpGas,
@@ -192,6 +203,7 @@ library PaymasterLib {
         return ((_actualGasCost + (_postOpGas * _actualUserOpFeePerGas)) * _exchangeRate) / 1e18;
     }
 
+    /// @dev Extract the sender address from the raw calldata offset of a PackedUserOperation.
     function _getSender(PackedUserOperation calldata _userOp) internal pure returns (address) {
         address data;
         assembly {

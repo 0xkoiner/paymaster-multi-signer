@@ -32,6 +32,7 @@ contract KeysManager is ManagerAccessControl, IKeysManager {
         emit Events.Revoked(_keyHash);
     }
 
+    /// @dev Encode and store a key in `keyStorage`, add its hash to the enumerable set, and emit `Authorized`.
     function _addKey(Key memory _key) internal virtual returns (bytes32 keyHash) {
         keyHash = _key.hash();
         keyStorage[keyHash].set(
@@ -42,6 +43,7 @@ contract KeysManager is ManagerAccessControl, IKeysManager {
         emit Events.Authorized(keyHash, _key);
     }
 
+    /// @dev Clear the key from `keyStorage` and remove its hash from the enumerable set. Reverts if the key does not exist.
     function _removeKey(bytes32 _keyHash) internal virtual {
         keyStorage[_keyHash].clear();
         if (!keyHashes.remove(_keyHash)) revert Errors.KeyDoesNotExist();

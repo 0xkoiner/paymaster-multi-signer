@@ -10,36 +10,45 @@ import { FixedPointMathLib as Math } from "@solady/src/utils/FixedPointMathLib.s
 
 using LibBytes for LibBytes.BytesStorage;
 
+/// @title KeyLib
+/// @dev Role checks, hashing, signature unpacking, and selector whitelisting for Key structs.
 library KeyLib {
     uint256 private constant __DEPOSIT_SEL = 0xd0e30db000000000000000000000000000000000000000000000000000000000;
     uint256 private constant __ADD_STAKE_SEL = 0x0396cb6000000000000000000000000000000000000000000000000000000000;
     uint256 private constant __UNLOCK_STAKE_SEL = 0xbb9fe6bf00000000000000000000000000000000000000000000000000000000;
     uint256 private constant __ADD_SIGNER_SEL = 0x56864ab100000000000000000000000000000000000000000000000000000000;
 
+    /// @dev Compute the unique identifier for a key from its type and public key.
     function hash(Key memory _key) internal pure returns (bytes32) {
         return EfficientHashLib.hash(uint8(_key.keyType), uint256(keccak256(_key.publicKey)));
     }
 
+    /// @dev Compute the key hash for a Secp256k1 signer identified by EOA address.
     function hash(address _msgSender) internal pure returns (bytes32) {
         return EfficientHashLib.hash(uint8(SignerType.Secp256k1), uint256(keccak256(abi.encode(_msgSender))));
     }
 
+    /// @dev Compute the key hash for a P256 or WebAuthn key from its public coordinates and signer type.
     function hash(bytes32 _qx, bytes32 _qy, SignerType _signerType) internal pure returns (bytes32) {
         return EfficientHashLib.hash(uint8(_signerType), uint256(keccak256(abi.encode(_qx, _qy))));
     }
 
+    /// @dev Check the superAdmin flag directly from packed storage (second-to-last byte).
     function _isSuperAdmin(LibBytes.BytesStorage storage _s) internal view returns (bool) {
         uint256 encodedLength = _s.length();
         if (encodedLength == uint256(0)) revert Errors.KeyDoesNotExist();
         return _s.uint8At(Math.rawSub(encodedLength, 2)) != 0;
     }
 
+    /// @dev Check the admin flag directly from packed storage (last byte).
     function _isAdmin(LibBytes.BytesStorage storage _s) internal view returns (bool) {
         uint256 encodedLength = _s.length();
         if (encodedLength == uint256(0)) revert Errors.KeyDoesNotExist();
         return _s.uint8At(Math.rawSub(encodedLength, 1)) != 0;
     }
 
+    /// @dev Return true if the key is a valid superAdmin: `isSuperAdmin` set, not admin, valid type,
+    ///      max expiry, and non-empty public key.
     function _isSuperAdmin(Key memory _k) internal pure returns (bool) {
         if (
             !_k.isSuperAdmin || _k.isAdmin || uint8(_k.keyType) < uint8(1) || _k.expiry != type(uint40).max
@@ -50,6 +59,8 @@ library KeyLib {
         return true;
     }
 
+    /// @dev Return true if the key is a valid admin: `isAdmin` set, not superAdmin, valid type,
+    ///      non-max expiry, and non-empty public key.
     function _isAdmin(Key memory _k) internal pure returns (bool) {
         if (
             _k.isSuperAdmin || !_k.isAdmin || uint8(_k.keyType) < uint8(1) || _k.expiry == type(uint40).max
@@ -60,6 +71,8 @@ library KeyLib {
         return true;
     }
 
+    /// @dev Return true if the key is a signer: not superAdmin, not admin, non-max expiry,
+    ///      and non-empty public key. Does NOT check time-based expiry.
     function _isSigner(Key memory _k) internal pure returns (bool) {
         if (_k.isSuperAdmin || _k.isAdmin || _k.expiry == type(uint40).max || _k.publicKey.length == 0) {
             return false;
@@ -67,6 +80,7 @@ library KeyLib {
         return true;
     }
 
+    /// @dev Return true if the key has not expired (`expiry >= block.timestamp`).
     function _keyValidation(Key memory _k) internal view returns (bool) {
         if (_k.expiry < uint40(block.timestamp)) {
             return false;
@@ -75,6 +89,8 @@ library KeyLib {
         return true;
     }
 
+    /// @dev Revert if the signature length does not match the expected size for the given signer type
+    ///      (P256: 128/129, WebAuthn: dynamic with bounds checks, Secp256k1: 64/65).
     function _validateSignatureLength(bytes memory _signature, uint8 _signerType) internal pure {
         assembly {
             let len := mload(_signature)
@@ -131,6 +147,8 @@ library KeyLib {
         }
     }
 
+    /// @dev Extract (r, s, qx, qy, prehash) from a P256 signature. The prehash flag is read from
+    ///      the 129th byte when present (non-extractable key).
     function _unpackP256Signature(bytes memory _signature)
         internal
         pure
@@ -147,6 +165,7 @@ library KeyLib {
         }
     }
 
+    /// @dev Extract the P256 public key coordinates (qx, qy) from the last 64 bytes of a WebAuthn signature.
     function _unpackWebAuthnCoordinats(bytes memory _signature) internal pure returns (bytes32 qx, bytes32 qy) {
         uint256 len = _signature.length;
         assembly {
@@ -155,6 +174,8 @@ library KeyLib {
         }
     }
 
+    /// @dev Return true if the selector is in the admin-allowed whitelist:
+    ///      `deposit()`, `addStake(uint32)`, `unlockStake()`, `addSigner(Key)`.
     function _isAllowedSelector(bytes4 _sel) internal pure returns (bool isValid) {
         assembly {
             /// @dev:  deposit()::0xd0e30db0  addStake(uint32)::0x0396cb60  unlockStake()::0xbb9fe6bf

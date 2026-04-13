@@ -11,6 +11,7 @@ abstract contract ManagerAccessControl is Storage {
     using KeyLib for *;
     using LibBytes for LibBytes.BytesStorage;
 
+    /// @dev Restricts access to superAdmin keys, admin keys, the EntryPoint, or self-calls (via executeBatch).
     modifier onlySuperAdminOrAdminKeyOrEp() {
         bytes32 hash = msg.sender.hash();
         bool hasKey = keyStorage[hash].length() != 0;
@@ -23,6 +24,7 @@ abstract contract ManagerAccessControl is Storage {
         }
         _;
     }
+    /// @dev Restricts access to superAdmin keys, the EntryPoint, or self-calls (via executeBatch).
     modifier onlySuperAdminKeyOrEp() {
         bytes32 hash = msg.sender.hash();
         bool hasKey = keyStorage[hash].length() != 0;

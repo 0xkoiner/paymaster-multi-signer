@@ -54,6 +54,8 @@ abstract contract Validations is BasePaymaster, IValidations {
         _postOp(_mode, _context, _actualGasCost, _actualUserOpFeePerGas);
     }
 
+    /// @dev Route the paymaster validation to verifying or ERC-20 mode based on the mode byte,
+    ///      and enforce the bundler allowlist.
     function _validatePaymasterUserOp(
         PackedUserOperation calldata _userOp,
         bytes32 _userOpHash,
@@ -88,6 +90,8 @@ abstract contract Validations is BasePaymaster, IValidations {
         return (context, validationData);
     }
 
+    /// @dev Validate verifying mode: recover the signer key, check it is a non-expired signer,
+    ///      verify the cryptographic signature, and pack the validation result.
     function _validateVerifyingMode(
         PackedUserOperation calldata _userOp,
         bytes calldata _paymasterConfig,
@@ -133,6 +137,8 @@ abstract contract Validations is BasePaymaster, IValidations {
         return ("", validationData);
     }
 
+    /// @dev Validate ERC-20 mode: verify the signer, optionally charge a token pre-fund from the sender,
+    ///      and build the postOp context for settlement.
     function _validateERC20Mode(
         uint8 _mode,
         PackedUserOperation calldata _userOp,
@@ -221,6 +227,8 @@ abstract contract Validations is BasePaymaster, IValidations {
         return expectedPenaltyGas * _actualUserOpFeePerGas;
     }
 
+    /// @dev Settle the ERC-20 token payment: compute actual cost in tokens, transfer the difference
+    ///      between pre-funded and actual cost, and forward any surplus to the recipient.
     function _postOp(
         PostOpMode, /* mode */
         bytes calldata _context,
@@ -304,6 +312,8 @@ abstract contract Validations is BasePaymaster, IValidations {
         }
     }
 
+    /// @dev Build the digest the paymaster signer signs: hash of userOp fields (including callData),
+    ///      the paymaster config slice, the signer type, and the chain id.
     function _getHash(
         PackedUserOperation calldata _userOp,
         uint256 _paymasterDataLength,
@@ -330,6 +340,8 @@ abstract contract Validations is BasePaymaster, IValidations {
         return keccak256(abi.encode(userOpHash, block.chainid));
     }
 
+    /// @dev Account-level signature validation. Routes to the appropriate signer type handler.
+    ///      Signer keys are rejected here — only superAdmin and admin keys may sign account operations.
     function _validateSignature(
         PackedUserOperation calldata _userOp,
         bytes32 _userOpHash
@@ -357,6 +369,8 @@ abstract contract Validations is BasePaymaster, IValidations {
         }
     }
 
+    /// @dev Validate a WebAuthn P256 signature for account operations.
+    ///      Rejects signer keys, allows superAdmin unconditionally and admin with valid callData.
     function _validateWebAuthnSigner(
         PackedUserOperation calldata _userOp,
         bytes32 _userOpHash
@@ -384,6 +398,8 @@ abstract contract Validations is BasePaymaster, IValidations {
         return SIG_VALIDATION_FAILED;
     }
 
+    /// @dev Validate a Secp256k1 (EOA) signature for account operations.
+    ///      Rejects signer keys, allows superAdmin unconditionally and admin with valid callData.
     function _validateSecp256k1Signer(
         PackedUserOperation calldata _userOp,
         bytes32 _userOpHash
@@ -407,6 +423,7 @@ abstract contract Validations is BasePaymaster, IValidations {
         return SIG_VALIDATION_FAILED;
     }
 
+    /// @dev Check whether the callData targets an allowed selector or a valid executeBatch.
     function _validateCallData(bytes calldata _callData) internal view returns (bool) {
         bytes4 sel = bytes4(LibBytes.loadCalldata(_callData, 0x00));
 
@@ -417,6 +434,8 @@ abstract contract Validations is BasePaymaster, IValidations {
         return _validateCalls(_callData);
     }
 
+    /// @dev Validate every call in an executeBatch against the admin-allowed selector whitelist.
+    ///      Returns false if any call uses a disallowed selector.
     function _validateCalls(bytes calldata _callData) internal view returns (bool) {
         bytes calldata params = LibBytes.sliceCalldata(_callData, 4);
         bytes calldata arr = LibBytes.dynamicStructInCalldata(params, 0);

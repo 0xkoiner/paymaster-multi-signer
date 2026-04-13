@@ -11,6 +11,13 @@ import { IEntryPoint } from "@account-abstraction/contracts/interfaces/IEntryPoi
 contract PaymasterEntry is Paymaster {
     using KeyLib for *;
 
+    /// @notice Deploy the paymaster with an initial key set, EntryPoint binding, and bundler allowlist.
+    /// @param _superAdmin      The superAdmin key (must pass `_isSuperAdmin()`).
+    /// @param _admin           The admin key (must pass `_isAdmin()`).
+    /// @param _signers         Initial signer keys (each must pass `_isSigner()`).
+    /// @param _entryPoint      The ERC-4337 EntryPoint this paymaster is bound to (immutable, non-zero).
+    /// @param _webAuthnVerifier The WebAuthn P256 verifier contract (immutable, non-zero).
+    /// @param _allowedBundlers Addresses initially permitted to submit user operations (non-zero each).
     constructor(
         Key memory _superAdmin,
         Key memory _admin,

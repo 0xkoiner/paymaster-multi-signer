@@ -115,6 +115,7 @@ abstract contract BasePaymaster is MultiSigner, IBasePaymaster {
         }
     }
 
+    /// @dev Reverts if the caller is not the bound EntryPoint contract.
     function _requireFromEntryPoint() internal view virtual {
         require(msg.sender == address(entryPoint), Errors.SenderNotEntryPoint());
     }
