@@ -152,20 +152,20 @@ abstract contract Validations is BasePaymaster {
             if (cfg.signerType == uint8(SignerType.P256)) {
                 (bytes32 r, bytes32 s, bytes32 qx, bytes32 qy, bool prehash) = cfg.signature._unpackP256Signature();
                 Key memory key = getKey(qx.hash(qy, SignerType.P256));
-                if (key._keyValidation()) {
+                if (key._keyValidation() && key._isSigner()) {
                     bytes32 digest = prehash ? EfficientHashLib.sha2(hash) : hash;
                     isSignatureValid = webAuthnVerifier.verifyP256Signature(digest, r, s, qx, qy);
                 }
             } else if (cfg.signerType == uint8(SignerType.WebAuthnP256)) {
                 (bytes32 qx, bytes32 qy) = cfg.signature._unpackWebAuthnCoordinats();
                 Key memory key = getKey(qx.hash(qy, SignerType.WebAuthnP256));
-                if (key._keyValidation()) {
+                if (key._keyValidation() && key._isSigner()) {
                     isSignatureValid = webAuthnVerifier.verifyEncodedSignature(hash, true, cfg.signature, qx, qy);
                 }
             } else if (cfg.signerType == uint8(SignerType.Secp256k1)) {
                 address recoveredSigner = ECDSA.recover(hash, cfg.signature);
                 Key memory key = getKey(recoveredSigner.hash());
-                isSignatureValid = key._keyValidation();
+                isSignatureValid = (key._keyValidation() && key._isSigner());
             }
         }
 
@@ -426,9 +426,11 @@ abstract contract Validations is BasePaymaster {
                 bytes4 sel = bytes4(LibBytes.loadCalldata(data, 0x00));
 
                 if (sel == Types.APPROVE_SEL) {
-                    return address(uint160(uint256(LibBytes.loadCalldata(data, 0x04)))) == address(this);
-                } else {
-                    return sel._isAllowedSelector();
+                    if (address(uint160(uint256(LibBytes.loadCalldata(data, 0x04)))) != address(this)) {
+                        return false;
+                    }
+                } else if (!sel._isAllowedSelector()) {
+                    return false;
                 }
             }
 

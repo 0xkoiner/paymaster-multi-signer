@@ -238,10 +238,7 @@ contract InvariantPaymaster is Helpers {
         for (uint256 i = 0; i < count; i++) {
             Key memory k = paymaster.keyAt(i);
             if (k.isSuperAdmin || k.isAdmin) {
-                assertTrue(
-                    uint8(k.keyType) >= 1 || uint8(k.keyType) == 0,
-                    "INV-6: keyType must be valid SignerType"
-                );
+                assertTrue(uint8(k.keyType) >= 1 || uint8(k.keyType) == 0, "INV-6: keyType must be valid SignerType");
             }
             assertTrue(uint8(k.keyType) <= 2, "INV-6: keyType must be 0, 1, or 2");
         }
@@ -321,8 +318,8 @@ contract InvariantPaymaster is Helpers {
     // ------------------------------------------------------------------------------------
 
     function invariant_getCostInToken_monotonic() external pure {
-        uint256 costLow = PaymasterLib._getCostInToken(1e6, 50000, 10, 0.5e18);
-        uint256 costHigh = PaymasterLib._getCostInToken(1e6, 50000, 10, 2e18);
+        uint256 costLow = PaymasterLib._getCostInToken(1e6, 50_000, 10, 0.5e18);
+        uint256 costHigh = PaymasterLib._getCostInToken(1e6, 50_000, 10, 2e18);
         assertTrue(costLow <= costHigh, "INV-39: Higher rate must produce higher cost");
     }
 
@@ -333,8 +330,8 @@ contract InvariantPaymaster is Helpers {
     // ------------------------------------------------------------------------------------
 
     function invariant_getCostInToken_1e18_exact() external pure {
-        uint256 cost = PaymasterLib._getCostInToken(1e6, 50000, 10, 1e18);
-        uint256 expected = 1e6 + 50000 * 10;
+        uint256 cost = PaymasterLib._getCostInToken(1e6, 50_000, 10, 1e18);
+        uint256 expected = 1e6 + 50_000 * 10;
         assertEq(cost, expected, "INV-41: 1e18 rate must return exact gas cost");
     }
 
@@ -345,7 +342,7 @@ contract InvariantPaymaster is Helpers {
     // ------------------------------------------------------------------------------------
 
     function invariant_penalty_zero_when_no_limit() external view {
-        uint256 result = paymaster._expectedPenaltyGasCost(1e6, 10, 50000, 1e5, 0);
+        uint256 result = paymaster._expectedPenaltyGasCost(1e6, 10, 50_000, 1e5, 0);
         assertEq(result, 0, "INV-42: Zero limit must produce zero penalty");
     }
 
@@ -358,8 +355,8 @@ contract InvariantPaymaster is Helpers {
     function invariant_penalty_10_percent() external view {
         // actualGas = 0, preOp = 0, executionGasLimit = 100000
         // unused = 100000, penalty = 10000, result = 10000 * 10 = 100000
-        uint256 result = paymaster._expectedPenaltyGasCost(0, 10, 0, 0, 100000);
-        assertEq(result, 100000, "INV-43: Penalty must be 10% of unused * fee");
+        uint256 result = paymaster._expectedPenaltyGasCost(0, 10, 0, 0, 100_000);
+        assertEq(result, 100_000, "INV-43: Penalty must be 10% of unused * fee");
     }
 
     // ------------------------------------------------------------------------------------
