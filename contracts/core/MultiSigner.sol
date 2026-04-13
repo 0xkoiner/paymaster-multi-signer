@@ -12,16 +12,6 @@ abstract contract MultiSigner is KeysManager {
     using KeyLib for *;
     using EnumerableSetLib for *;
 
-    // function addSigner(address _signer) public onlySuperAdminOrAdminKeyOrEp {
-    //     signers[_signer] = true;
-    //     emit Events.SignerAdded(_signer);
-    // }
-
-    // function removeSigner(address _signer) public onlySuperAdminKeyOrEp {
-    //     signers[_signer] = false;
-    //     emit Events.SignerRemoved(_signer);
-    // }
-
     function addSigner(Key calldata _signer) public onlySuperAdminOrAdminKeyOrEp {
         if (keyHashes.contains(_signer.hash())) revert Errors.KeyAuthorized();
         if (_signer.isSuperAdmin || _signer.isAdmin) revert Errors.IncorrectSignerRole();
