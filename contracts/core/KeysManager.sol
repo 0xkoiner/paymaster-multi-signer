@@ -43,7 +43,8 @@ contract KeysManager is ManagerAccessControl, IKeysManager {
         emit Events.Authorized(keyHash, _key);
     }
 
-    /// @dev Clear the key from `keyStorage` and remove its hash from the enumerable set. Reverts if the key does not exist.
+    /// @dev Clear the key from `keyStorage` and remove its hash from the enumerable set. Reverts if the key does not
+    /// exist.
     function _removeKey(bytes32 _keyHash) internal virtual {
         keyStorage[_keyHash].clear();
         if (!keyHashes.remove(_keyHash)) revert Errors.KeyDoesNotExist();
